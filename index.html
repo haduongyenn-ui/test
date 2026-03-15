@@ -2,49 +2,48 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v21.0 - Multi-Target Sniper</title>
+    <title>Analyzer v23.0 - The Judge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-container { border-radius: 2rem; padding: 2rem; margin-bottom: 2rem; background: #0f172a; border: 2px solid rgba(255,255,255,0.05); }
-        .card-item { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; transition: 0.2s; position: relative; }
-        .card-item:hover { border-color: #10b981; }
-        .hex-patch-btn { background: #059669; color: white; font-weight: 900; transition: 0.2s; }
-        .hex-patch-btn:active { transform: scale(0.95); opacity: 0.8; }
-        .rva-code { font-family: 'Courier New', monospace; color: #f43f5e; font-weight: 900; background: #000; padding: 4px 8px; border-radius: 6px; border: 1px solid #312e81; }
-        .func-name { color: #94a3b8; font-size: 11px; font-family: monospace; word-break: break-all; }
+        .judge-container { border-radius: 2.5rem; padding: 2rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
+        .target-card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; border-left: 5px solid #10b981; }
+        .target-card:hover { transform: scale(1.03); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+        .hex-fill-btn { background: #10b981; color: #000; font-weight: 900; }
+        .rva-final { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #10b981; text-align: center; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
-    <div class="max-w-[1600px] mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-5xl font-black text-white italic uppercase tracking-tighter">MULTI SNIPER <span class="text-emerald-500">v21.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.4em]">Liệt Kê Toàn Bộ RVA Chính • Phân Loại Nhóm Hack</p>
+    <div class="max-w-[1400px] mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">THE JUDGE <span class="text-emerald-500">v23.0</span></h1>
+            <p class="text-slate-500 font-bold text-sm mt-3 uppercase tracking-[0.5em]">Lọc 100 Lấy 1 • Chỉ Gửi RVA Hoạt Động Chính</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-10 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic">Thả file <span class="text-emerald-500 underline">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-12 transition-all">
+            <p class="text-2xl text-slate-400 font-black uppercase italic tracking-widest">Thả file <span class="text-emerald-500 underline uppercase">dump.cs</span> vào đây</p>
         </div>
 
-        <div id="resultsArea" class="space-y-10"></div>
+        <div id="resultsArea" class="space-y-12 text-center"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        const filterLogic = [
-            { id: 'hp', label: '❤️ NHÓM MÁU (HP)', keys: ['hp', 'health', 'life'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'mp', label: '💧 NHÓM NĂNG LƯỢNG (MP)', keys: ['mp', 'mana', 'energy'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'money', label: '💰 NHÓM TIỀN TỆ (GOLD/GEM)', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby', 'money'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'combat', label: '⚔️ NHÓM CHIẾN ĐẤU (DAME/CD)', keys: ['damage', 'attack', 'cooldown', 'skilldelay', 'movespeed'], hex: "DAME: 00 00 C8 42... | CD: 0.0f" },
-            { id: 'iap', label: '🛒 NHÓM VIP & MỞ KHÓA', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'price', 'cost'], hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'ads', label: '🚫 NHÓM ADS & ANTIBAN', keys: ['ads', 'showads', 'isbanned', 'detectcheat'], hex: "00 00 80 D2 C0 03 5F D6" }
+        // CHỈ ĐỊNH CÁC HÀM "TỬ HUYỆT" CHUẨN NHẤT
+        const judgeRules = [
+            { id: 'gold', label: 'VÀNG (Gold)', priority: ['get_gold', 'get_coin', 'get_money'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'gem', label: 'KIM CƯƠNG (Gem)', priority: ['get_diamond', 'get_gem', 'get_ruby'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'hp', label: 'MÁU (HP)', priority: ['get_maxhp', 'get_maxhealth'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'mp', label: 'MP', priority: ['get_maxmp', 'get_maxmana'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'vip', label: 'VIP/PREMIUM', priority: ['isvip', 'ispremium', 'ispurchased'], hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'antiban', label: 'ANTIBAN', priority: ['isbanned', 'detectcheat'], hex: "00 00 80 D2 C0 03 5F D6" },
+            { id: 'ads', label: 'TẮT ADS', priority: ['hasads', 'isadavailable'], hex: "00 00 80 D2 C0 03 5F D6" },
+            { id: 'freeshop', label: 'FREE SHOP', priority: ['get_price', 'get_cost'], hex: "00 00 80 D2 C0 03 5F D6" }
         ];
-
-        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'item', 'count', 'index', 'identity'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -57,55 +56,61 @@
 
         function processDump(content) {
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(/gi;
-            let match, winners = {};
+            let rawMatches = [];
+            let match;
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
-                if (blacklist.some(b => nameL.includes(b))) continue;
-
-                filterLogic.forEach(group => {
-                    if (group.keys.some(k => nameL.includes(k))) {
-                        if (!winners[group.id]) winners[group.id] = [];
-                        winners[group.id].push({ rva, name, type, hex: group.hex });
-                    }
-                });
+                rawMatches.push({ rva: match[1], name: match[3], nameL: match[3].toLowerCase() });
             }
-            render(winners);
+
+            let finalWinners = [];
+
+            judgeRules.forEach(rule => {
+                // Lọc trong 100 RVA để tìm cái chuẩn nhất theo thứ tự ưu tiên
+                for (let key of rule.priority) {
+                    let found = rawMatches.find(m => m.nameL === key || m.nameL.includes(key));
+                    if (found) {
+                        finalWinners.push({ ...found, label: rule.label, hex: rule.hex });
+                        break; // Đã tìm thấy 1 cái chuẩn nhất thì dừng lại
+                    }
+                }
+            });
+
+            render(finalWinners);
         }
 
-        function render(groups) {
+        function render(data) {
             resultsArea.innerHTML = '';
-            filterLogic.forEach(logic => {
-                const items = groups[logic.id];
-                if (!items || items.length === 0) return;
+            if (data.length === 0) {
+                resultsArea.innerHTML = '<p class="text-rose-500 font-black">KHÔNG TÌM THẤY RVA CHUẨN NÀO TRONG FILE DUMP!</p>';
+                return;
+            }
 
-                resultsArea.insertAdjacentHTML('beforeend', `
-                    <div class="group-container">
-                        <h2 class="text-3xl font-black mb-6 uppercase italic text-emerald-500">${logic.label} (${items.length})</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            ${items.map(item => `
-                                <div class="card-item p-5 shadow-xl">
-                                    <div class="mb-4">
-                                        <div class="func-name mb-1">Hàm: ${item.name}</div>
-                                        <div class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest italic">${item.type}</div>
-                                    </div>
-                                    <div class="mb-4">
-                                        <div class="text-[10px] text-slate-600 font-bold uppercase mb-1 text-center">RVA Địa Chỉ</div>
-                                        <div class="rva-code text-center text-sm cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</div>
-                                    </div>
-                                    <div class="pt-4 border-t border-slate-800">
-                                        <button onclick="navigator.clipboard.writeText('${item.hex.split(':')[0].trim()}'); alert('Copied Hex!')" 
-                                            class="hex-patch-btn w-full py-3 rounded-xl text-[10px] uppercase tracking-widest mb-2 shadow-lg">
-                                            COPY MÃ HEX
-                                        </button>
-                                        <div class="text-center text-[9px] text-slate-500 font-mono">${item.hex}</div>
-                                    </div>
+            resultsArea.insertAdjacentHTML('beforeend', `
+                <div class="judge-container">
+                    <h2 class="text-2xl font-black text-emerald-500 mb-8 uppercase italic tracking-widest">--- DANH SÁCH RVA CHUẨN NHẤT ---</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${data.map(item => `
+                            <div class="target-card p-6 text-left">
+                                <div class="mb-4">
+                                    <h3 class="text-xl font-black text-white italic uppercase">${item.label}</h3>
+                                    <p class="text-[10px] text-slate-500 font-mono">Hàm xác định: ${item.name}</p>
                                 </div>
-                            `).join('')}
-                        </div>
+                                <div class="mb-6">
+                                    <div class="text-[9px] text-emerald-400 font-bold mb-2 uppercase">Địa chỉ RVA (Dán vào Filza):</div>
+                                    <div class="rva-final cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</div>
+                                </div>
+                                <div class="pt-4 border-t border-slate-800">
+                                    <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Đã Copy Hex!')" 
+                                        class="hex-fill-btn w-full py-4 rounded-xl text-xs shadow-lg active:scale-95 transition-all">
+                                        COPY MÃ HEX DỨT ĐIỂM
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
-                `);
-            });
+                </div>
+            `);
         }
     </script>
 </body>

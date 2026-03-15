@@ -2,66 +2,78 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hex Patch Finder - Unity iOS</title>
+    <title>Pro Hex Analysis - Unity iOS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .hex-code { font-family: 'Courier New', monospace; color: #facc15; font-weight: bold; }
-        .rva-addr { color: #fb7185; font-weight: bold; }
+        .hex-code { font-family: 'Courier New', monospace; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #fbbf24; }
+        .rva-addr { color: #f43f5e; font-weight: bold; font-family: 'Consolas', monospace; }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-200 p-6">
-    <div class="max-w-5xl mx-auto">
-        <header class="mb-8 border-b border-gray-800 pb-4">
-            <h1 class="text-3xl font-black text-rose-500">HEX PATCH ANALYZER</h1>
-            <p class="text-gray-400 italic">Tìm RVA và gợi ý mã máy (ARM64) để Hex Edit</p>
+<body class="bg-[#020617] text-slate-300 p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400">
+                AUTO FUNCTION ANALYZER
+            </h1>
+            <p class="mt-2 text-slate-500 italic text-sm">Phân tích chuyên sâu công dụng hàm và mã Hex Patch cho ARM64</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center bg-gray-900 hover:bg-gray-800 cursor-pointer mb-8 transition-all">
-            <p class="text-xl">Kéo file <span class="text-rose-400 font-bold">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 rounded-3xl p-16 text-center bg-slate-900/50 hover:bg-slate-900 hover:border-rose-500 transition-all cursor-pointer mb-10 shadow-2xl">
+            <div class="flex flex-col items-center gap-4">
+                <svg class="w-12 h-12 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.628.281a2 2 0 01-1.18.124l-2.404-.481a2 2 0 01-1.17-.633C4.803 11.413 5.432 10 6.636 10H18.22a2 2 0 011.96 1.428l1.105 4.105" /></svg>
+                <p class="text-xl">Thả file <span class="font-bold text-white">dump.cs</span> vào đây để "giải mã"</p>
+            </div>
         </div>
 
-        <div id="results" class="hidden space-y-4">
-            <div class="overflow-x-auto rounded-xl border border-gray-800">
+        <div id="results" class="hidden animate-in fade-in slide-in-from-bottom-5 duration-700">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
                 <table class="w-full text-left">
-                    <thead class="bg-gray-800">
-                        <tr>
-                            <th class="p-4">Tên Hàm (Method)</th>
-                            <th class="p-4">Địa chỉ RVA</th>
-                            <th class="p-4">Mã Hex để Patch (ARM64)</th>
-                            <th class="p-4">Tác dụng</th>
+                    <thead class="bg-slate-800/50">
+                        <tr class="text-xs uppercase tracking-wider text-slate-400">
+                            <th class="p-5">Hàm & RVA</th>
+                            <th class="p-5">Phân Tích Công Dụng</th>
+                            <th class="p-5">Gợi Ý Hex Patch (ARM64)</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody" class="divide-y divide-gray-800 bg-gray-900/50"></tbody>
+                    <tbody id="tableBody" class="divide-y divide-slate-800"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        const keywords = ['gold', 'money', 'hp', 'health', 'damage', 'atk', 'isvip', 'ispremium', 'energy', 'mana'];
-        
-        // Xử lý file
-        document.getElementById('dropZone').onclick = () => {
-            let i = document.createElement('input'); i.type = 'file';
-            i.onchange = e => handleFile(e.target.files[0]); i.click();
-        };
+        const dropZone = document.getElementById('dropZone');
+        const tableBody = document.getElementById('tableBody');
+        const resultsArea = document.getElementById('results');
+
+        // Danh sách từ khóa và logic phân tích
+        const analysisRules = [
+            { keys: ['gold', 'money', 'gem', 'diamond', 'coin', 'currency'], desc: 'Điều khiển số lượng tài nguyên/tiền trong game.', patchType: 'MAX' },
+            { keys: ['hp', 'health'], desc: 'Kiểm soát lượng máu. Patch để bất tử hoặc hồi máu cực nhanh.', patchType: 'MAX' },
+            { keys: ['damage', 'atk', 'attack'], desc: 'Điều chỉnh sức mạnh tấn công. Patch để có One-Hit Kill.', patchType: 'MAX' },
+            { keys: ['speed', 'velocity'], desc: 'Tốc độ di chuyển hoặc tốc độ đánh.', patchType: 'MAX' },
+            { keys: ['isvip', 'ispremium', 'isbought', 'isunlocked', 'haspaid'], desc: 'Kiểm tra trạng thái mua hàng hoặc đặc quyền VIP.', patchType: 'TRUE' },
+            { keys: ['isdead', 'checkanticheat', 'isbanned', 'cooldown'], desc: 'Hàm kiểm tra các trạng thái gây bất lợi.', patchType: 'FALSE' }
+        ];
+
+        dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
         function handleFile(file) {
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = e => {
                 const content = e.target.result;
-                // Regex tìm RVA và hàm ngay bên dưới
                 const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*(?:public|private|static|virtual)*\s+(\w+)\s+(\w+)\s*\(/gi;
                 let match, results = [];
-
                 while ((match = regex.exec(content)) !== null) {
                     const rva = match[1];
-                    const returnType = match[2];
-                    const methodName = match[3];
-
-                    if (keywords.some(k => methodName.toLowerCase().includes(k))) {
-                        results.push({ rva, returnType, methodName });
-                    }
+                    const retType = match[2];
+                    const name = match[3];
+                    analysisRules.forEach(rule => {
+                        if(rule.keys.some(k => name.toLowerCase().includes(k))) {
+                            results.push({ rva, retType, name, desc: rule.desc, patchType: rule.patchType });
+                        }
+                    });
                 }
                 render(results);
             };
@@ -69,26 +81,28 @@
         }
 
         function render(data) {
-            document.getElementById('results').classList.remove('hidden');
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = data.map(item => {
-                let patch = "00 00 80 D2 C0 03 5F D6"; // Mặc định: return 0
-                let desc = "Trả về 0 (False)";
+            resultsArea.classList.remove('hidden');
+            tableBody.innerHTML = data.map(item => {
+                let hex = "00 00 80 D2 C0 03 5F D6"; // return 0
+                if(item.patchType === 'TRUE') hex = "20 00 80 D2 C0 03 5F D6"; // return 1
+                if(item.patchType === 'MAX') hex = "00 E1 00 D2 C0 03 5F D6"; // return lớn (khoảng 900-1000)
 
-                if (item.returnType.toLowerCase().includes('int') || item.returnType.toLowerCase().includes('float')) {
-                    patch = "00 E1 00 D2 C0 03 5F D6"; // Gợi ý return lớn (ví dụ 999)
-                    desc = "Trả về số lớn (Max)";
-                } else if (item.returnType.toLowerCase().includes('bool')) {
-                    patch = "20 00 80 D2 C0 03 5F D6"; // return 1 (True)
-                    desc = "Trả về TRUE (Bật)";
-                }
-
-                return `<tr>
-                    <td class="p-4 font-bold text-blue-300">${item.methodName}</td>
-                    <td class="p-4 rva-addr">${item.rva}</td>
-                    <td class="p-4 hex-code">${patch}</td>
-                    <td class="p-4 text-sm text-gray-400">${desc}</td>
-                </tr>`;
+                return `
+                    <tr class="hover:bg-slate-800/40 transition-colors">
+                        <td class="p-5">
+                            <div class="text-white font-bold">${item.name}</div>
+                            <div class="text-xs rva-addr mt-1">RVA: ${item.rva}</div>
+                            <div class="text-[10px] text-slate-600 mt-1 uppercase font-mono">Type: ${item.retType}</div>
+                        </td>
+                        <td class="p-5 text-sm leading-relaxed text-slate-400">
+                            ${item.desc} <br>
+                            <span class="text-rose-500/80 text-[11px] font-bold italic">→ Đề xuất: Patch để ${item.patchType === 'TRUE' ? 'Bật' : (item.patchType === 'FALSE' ? 'Tắt' : 'Tăng cực đại')}</span>
+                        </td>
+                        <td class="p-5">
+                            <div class="hex-code mb-2 text-center text-xs">${hex}</div>
+                            <button onclick="navigator.clipboard.writeText('${hex}')" class="w-full text-[10px] bg-slate-800 hover:bg-rose-600 py-1 rounded transition-all uppercase font-bold tracking-tighter">Copy Hex</button>
+                        </td>
+                    </tr>`;
             }).join('');
         }
     </script>

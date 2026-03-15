@@ -2,27 +2,27 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>100% Verified - One Hit Hack</title>
+    <title>Verified One-Hit Hack Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .verified-card { background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #334155; transition: 0.3s; }
-        .verified-card:hover { border-color: #10b981; transform: scale(1.02); }
-        .rva-glow { color: #f43f5e; text-shadow: 0 0 10px rgba(244, 63, 94, 0.3); }
+        .verified-card { background: #111827; border: 1px solid #1f2937; border-left: 5px solid #10b981; transition: 0.3s; }
+        .verified-card:hover { border-color: #10b981; transform: translateY(-3px); }
+        .hex-box { font-family: 'Courier New', monospace; background: #000; color: #fbbf24; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-6 font-sans">
+<body class="bg-[#0b0f1a] text-slate-300 p-6 font-sans">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="text-3xl font-black text-white uppercase tracking-tighter">Verified One-Hit Finder</h1>
-            <p class="text-emerald-500 font-bold text-sm mt-2">Chỉ lấy 1 hàm chuẩn nhất cho mỗi tính năng - Hoạt động 100%</p>
+            <h1 class="text-4xl font-black text-white uppercase tracking-tighter">Verified Hack Analyzer</h1>
+            <p class="text-emerald-500 font-bold text-sm mt-2 uppercase tracking-widest">Tự động chọn 1 hàm chuẩn nhất cho từng tính năng</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 transition-all cursor-pointer mb-8">
-            <p class="text-lg text-slate-400">Thả file <span class="text-emerald-500 font-bold">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-16 text-center bg-slate-900/30 hover:bg-slate-900 transition-all cursor-pointer mb-12 shadow-2xl">
+            <p class="text-xl text-slate-400">Thả file <span class="text-emerald-500 font-bold underline">dump.cs</span> để lấy "Hàm Vua"</p>
         </div>
 
-        <div id="results" class="hidden space-y-4">
+        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
             </div>
     </div>
 
@@ -30,16 +30,18 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
 
-        // Định nghĩa các nhóm ưu tiên
-        const groups = [
-            { id: 'money', label: 'VÔ HẠN TIỀN', keys: ['gold', 'money', 'coin', 'diamond', 'gem', 'currency', 'balance'], hex: '00 E1 00 D2 C0 03 5F D6' },
-            { id: 'health', label: 'BẤT TỬ MÁU', keys: ['hp', 'health', 'maxhealth'], hex: '00 E1 00 D2 C0 03 5F D6' },
-            { id: 'combat', label: 'HỒI CHIÊU/TỐC ĐỘ', keys: ['cooldown', 'attackspeed', 'movespeed'], hex: '00 E1 00 D2 C0 03 5F D6' },
-            { id: 'vip', label: 'MỞ KHÓA VIP', keys: ['isvip', 'ispremium', 'isunlocked', 'haspaid'], hex: '20 00 80 D2 C0 03 5F D6' }
+        // Định nghĩa các nhóm tính năng muốn tìm
+        const categories = [
+            { id: 'money', label: 'Vô hạn Tiền/Vàng', keys: ['gold', 'money', 'coin', 'diamond', 'gem', 'currency', 'balance'], hex: '00 E1 00 D2 C0 03 5F D6' },
+            { id: 'health', label: 'Bất tử Máu', keys: ['hp', 'health', 'maxhealth'], hex: '00 E1 00 D2 C0 03 5F D6' },
+            { id: 'cooldown', label: 'Hồi chiêu 0s', keys: ['cooldown', 'cd'], hex: '00 00 80 D2 C0 03 5F D6' }, // Return 0
+            { id: 'damage', label: 'One-Hit / Sát thương', keys: ['damage', 'atk', 'attack'], hex: '00 E1 00 D2 C0 03 5F D6' },
+            { id: 'vip', label: 'Mở khóa VIP/Premium', keys: ['isvip', 'ispremium', 'isunlocked', 'haspaid'], hex: '20 00 80 D2 C0 03 5F D6' },
+            { id: 'speed', label: 'Siêu tốc độ', keys: ['speed', 'velocity', 'movespeed'], hex: '00 E1 00 D2 C0 03 5F D6' }
         ];
 
-        // Danh sách từ khóa rác (Tuyệt đối không lấy)
-        const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'negative', 'positive', 'digits', 'group', 'string', 'array'];
+        // Danh sách rác hệ thống (Cần loại bỏ 100%)
+        const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive', 'string', 'array'];
 
         dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -47,30 +49,28 @@
             const reader = new FileReader();
             reader.onload = e => {
                 const content = e.target.result;
-                const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(\w+)\s+(get_\w+)\(\)/gi;
+                const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+)\(\)/gi;
                 let match;
-                let bestMatches = {}; // Nơi lưu trữ 1 hàm tốt nhất cho mỗi nhóm
+                let winners = {}; // Lưu trữ 1 hàm tốt nhất cho mỗi loại
 
                 while ((match = regex.exec(content)) !== null) {
                     const rva = match[1];
-                    const retType = match[2];
-                    const name = match[3];
+                    const name = match[2];
                     const nameLower = name.toLowerCase();
 
-                    // Kiểm tra xem có dính từ khóa rác không
+                    // 1. Kiểm tra rác hệ thống
                     if (junk.some(j => nameLower.includes(j))) continue;
 
-                    // Duyệt qua các nhóm ưu tiên
-                    groups.forEach(group => {
-                        if (group.keys.some(k => nameLower.includes(k))) {
-                            // Thuật toán chọn hàm: Ưu tiên hàm ngắn nhất vì thường là hàm gốc (như get_Gold tốt hơn get_GoldMultiplier)
-                            if (!bestMatches[group.id] || name.length < bestMatches[group.id].name.length) {
-                                bestMatches[group.id] = { rva, name, hex: group.hex, label: group.label };
+                    // 2. Phân loại và so sánh để chọn hàm "Vua" (Ưu tiên tên ngắn nhất)
+                    categories.forEach(cat => {
+                        if (cat.keys.some(k => nameLower.includes(k))) {
+                            if (!winners[cat.id] || name.length < winners[cat.id].name.length) {
+                                winners[cat.id] = { rva, name, label: cat.label, hex: cat.hex };
                             }
                         }
                     });
                 }
-                render(Object.values(bestMatches));
+                render(Object.values(winners));
             };
             reader.readAsText(file);
         }
@@ -78,20 +78,21 @@
         function render(data) {
             resultsArea.classList.remove('hidden');
             resultsArea.innerHTML = data.map(item => `
-                <div class="verified-card rounded-2xl p-5 flex justify-between items-center shadow-lg border-l-4 border-l-emerald-500">
+                <div class="verified-card rounded-2xl p-6 shadow-xl flex flex-col justify-between">
                     <div>
-                        <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded">${item.label}</span>
-                        <h3 class="text-xl font-bold text-white mt-2">${item.name}</h3>
-                        <p class="rva-glow font-mono text-sm mt-1">RVA: ${item.rva}</p>
+                        <span class="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full uppercase tracking-tighter">${item.label}</span>
+                        <h3 class="text-xl font-bold text-white mt-4 break-all">${item.name}</h3>
+                        <p class="text-rose-500 font-mono text-sm mt-2 font-bold tracking-tight">RVA: ${item.rva}</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-slate-500 mb-1 uppercase font-bold">Mã Hex Patch</p>
-                        <code class="block bg-black/50 text-yellow-400 px-3 py-1 rounded border border-slate-700 font-bold mb-3">${item.hex}</code>
-                        <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Đã Copy Hex!')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 px-4 rounded-lg transition-all">COPY HEX</button>
+                    <div class="mt-6 border-t border-gray-800 pt-4">
+                        <p class="text-[10px] text-gray-500 font-bold mb-2 uppercase tracking-widest">Mã Hex Patch (ARM64)</p>
+                        <div class="hex-box p-3 rounded-lg text-xs font-bold mb-4 text-center border border-gray-700">
+                            ${item.hex}
+                        </div>
+                        <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Đã Copy Hex!')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl transition-all shadow-lg active:scale-95 text-xs">SAO CHÉP MÃ</button>
                     </div>
                 </div>
             `).join('');
-            if(data.length === 0) resultsArea.innerHTML = "<p class='text-center text-rose-500 font-bold'>Không tìm thấy hàm chuẩn nào. Game có thể đã bị mã hóa tên hàm.</p>";
         }
     </script>
 </body>

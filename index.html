@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v6.5 - Ultimate Integrity Bypass</title>
+    <title>Analyzer v6.6 - Anti-Ban & Combat Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; position: relative; overflow: hidden; }
@@ -22,13 +22,12 @@
 
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter italic">Analyzer <span class="text-indigo-500">v6.5</span></h1>
-            <p class="text-emerald-500 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Integrity Bypass • Multi-Resource • Level Selector • ARM64</p>
+            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">Analyzer <span class="text-indigo-500">v6.6</span></h1>
+            <p class="text-emerald-500 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Anti-Ban Pro • MP & Cooldown • ARM64</p>
         </header>
 
         <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-emerald-500 transition-all cursor-pointer mb-12 shadow-2xl group text-sm">
             <p class="text-xl text-slate-400 group-hover:text-emerald-400 transition-colors font-bold italic uppercase">Thả file <span class="underline">dump.cs</span> vào đây</p>
-            <p class="text-[10px] text-slate-600 mt-4 uppercase font-bold tracking-widest italic">Tự động chốt hàm chuẩn - Tách riêng vàng, kim cương, ruby và bypass bảo mật</p>
         </div>
 
         <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700"></div>
@@ -38,7 +37,6 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
 
-        // THƯ VIỆN GIÁ TRỊ TÙY CHỌN THEO KIỂU DỮ LIỆU
         const hexLibrary = {
             bool: [
                 { name: "TRUE (Bật/Bypass)", hex: "20 00 80 D2 C0 03 5F D6" },
@@ -47,31 +45,29 @@
             int: [
                 { name: "999.999 (Phổ biến)", hex: "00 E1 00 D2 C0 03 5F D6" },
                 { name: "50.000 (An toàn)", hex: "00 6D 81 D2 C0 03 5F D6" },
-                { name: "0 (Miễn phí/Bypass)", hex: "00 00 80 D2 C0 03 5F D6" },
                 { name: "MAX (2 Tỷ+)", hex: "FF FF 8F D2 FF FF AF F2 C0 03 5F D6" }
             ],
             float: [
-                { name: "2.0f (Vừa phải)", hex: "00 00 A0 40 C0 03 5F D6" },
-                { name: "1.5f (Nhẹ)", hex: "00 00 C0 3F C0 03 5F D6" },
-                { name: "10.0f (Mạnh)", hex: "00 00 20 41 C0 03 5F D6" },
-                { name: "0.0f (Xóa bỏ)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" }
+                { name: "0.0f (Hồi chiêu 0s)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" },
+                { name: "2.0f (Tốc độ x2)", hex: "00 00 A0 40 C0 03 5F D6" },
+                { name: "100.0f (Siêu cấp)", hex: "00 00 C8 42 C0 03 5F D6" }
             ]
         };
 
-        // DANH SÁCH TÀI NGUYÊN SẼ TÁCH RIÊNG
         const resourceKeys = ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal', 'emerald', 'sapphire', 'cash', 'stone', 'soul', 'token', 'currency'];
 
-        // CÁC NHÓM CHỨC NĂNG HỆ THỐNG
         const otherCategories = [
-            { id: 'bypass', label: '🛡️ INTEGRITY BYPASS', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified', 'checksum', 'integritycheck'], type: 'bool', desc: 'Vượt kiểm tra file thực thi.' },
-            { id: 'antiban', label: '🔥 ANTI-BAN / DETECT', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack', 'isroot'], type: 'bool', desc: 'Vô hiệu hóa quét gian lận.' },
-            { id: 'shop', label: '🛒 FREE SHOP (0đ)', keys: ['get_price', 'get_cost', 'isafford', 'enoughmoney'], type: 'bool', desc: 'Mua sắm không tốn tiền.' },
-            { id: 'noads', label: '🚫 NO ADS (XÓA ADS)', keys: ['showads', 'hasads', 'isads', 'advertisement'], type: 'bool', desc: 'Tắt toàn bộ quảng cáo.' },
-            { id: 'health', label: '❤️ BẤT TỬ (HP)', keys: ['hp', 'health', 'maxhealth'], type: 'int', desc: 'Khóa máu không giới hạn.' },
-            { id: 'combat', label: '⚔️ SPEED / DAMAGE', keys: ['speed', 'movespeed', 'atk', 'damage', 'cooldown'], type: 'float', desc: 'Chỉ số sức mạnh (Float).' }
+            { id: 'bypass', label: '🛡️ INTEGRITY BYPASS', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified', 'checksum'], type: 'bool', desc: 'Vượt kiểm tra file nhị phân.' },
+            // MỞ RỘNG ANTIBAN
+            { id: 'antiban', label: '🔥 ANTI-BAN PRO', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack', 'isroot', 'checkcheat', 'securitycheck', 'pacakgename', 'isemulator', 'ismodifiedclient'], type: 'bool', desc: 'Vô hiệu hóa toàn bộ trình quét bảo mật.' },
+            { id: 'shop', label: '🛒 FREE SHOP (0đ)', keys: ['get_price', 'get_cost', 'isafford'], type: 'bool', desc: 'Mua sắm giá 0đ.' },
+            { id: 'health', label: '❤️ HP / BẤT TỬ', keys: ['hp', 'health', 'maxhealth'], type: 'int', desc: 'Khóa máu cực đại.' },
+            // THÊM MP & HỒI CHIÊU
+            { id: 'mana', label: '💧 MP / NĂNG LƯỢNG', keys: ['mp', 'mana', 'energy', 'sp', 'skillpoint'], type: 'int', desc: 'Vô hạn năng lượng dùng chiêu.' },
+            { id: 'combat', label: '⚔️ SPEED / COOLDOWN', keys: ['speed', 'movespeed', 'atk', 'damage', 'cooldown', 'skilldelay'], type: 'float', desc: 'Hack tốc độ và Hồi chiêu 0s.' }
         ];
 
-        const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive', 'string', 'array'];
+        const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive'];
 
         dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -83,14 +79,13 @@
         }
 
         function processDump(content) {
-            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|verify\w+|show\w+)\(\)/gi;
+            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|verify\w+)\(\)/gi;
             let match, winners = {};
 
             while ((match = regex.exec(content)) !== null) {
                 const rva = match[1], name = match[2], nameLower = name.toLowerCase();
                 if (junk.some(j => nameLower.includes(j)) || name.length > 32) continue;
 
-                // 1. Tách riêng từng đơn vị tiền
                 resourceKeys.forEach(key => {
                     if (nameLower.includes(key)) {
                         const id = 'res_' + key;
@@ -100,7 +95,6 @@
                     }
                 });
 
-                // 2. Xử lý các nhóm chức năng khác
                 otherCategories.forEach(cat => {
                     if (cat.keys.some(k => nameLower.includes(k))) {
                         if (!winners[cat.id] || name.length < winners[cat.id].name.length) {

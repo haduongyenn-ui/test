@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate Modder Engine - Final Edition</title>
+    <title>Ultimate Modder Engine - Multi-Resource Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
@@ -10,6 +10,7 @@
         .card-shop { border-left: 5px solid #fbbf24; background: linear-gradient(to right, #422006, #0f172a); }
         .card-hack { border-left: 5px solid #10b981; }
         .hex-box { font-family: 'Courier New', monospace; background: #000; color: #fbbf24; border: 1px solid #334155; }
+        .rva-box { font-family: 'Courier New', monospace; background: #1e293b; color: #f43f5e; border: 1px solid #451a03; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
@@ -19,18 +20,13 @@
 
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">Ultimate Modder <span class="text-rose-500">v4.0</span></h1>
-            <p class="text-emerald-500 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Anti-Ban • Free Shop • No Ads • Full Currency • Float Logic</p>
+            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">Ultimate Modder <span class="text-rose-500">v5.0</span></h1>
+            <p class="text-emerald-500 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Tách riêng từng loại tiền • Anti-Ban • Copy RVA Pro</p>
         </header>
 
-        <div class="mb-8 flex gap-4 justify-center">
-            <input type="text" id="manualSearch" placeholder="Tìm thủ công (Vd: Ruby, LinhThach...)" class="bg-slate-900 border border-slate-700 rounded-xl px-6 py-3 w-full max-w-md focus:outline-none focus:border-emerald-500 text-sm">
-            <button id="searchBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3 rounded-xl text-sm transition-all shadow-lg active:scale-95">SĂN LÙNG</button>
-        </div>
-
         <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-emerald-500 transition-all cursor-pointer mb-12 shadow-2xl group">
-            <p class="text-xl text-slate-400 group-hover:text-emerald-400 transition-colors">Thả file <span class="font-bold underline">dump.cs</span> vào đây</p>
-            <p class="text-[10px] text-slate-600 mt-4 uppercase font-bold tracking-widest italic">Hệ thống tự chốt 1 hàm chuẩn nhất - Sạch 100% rác hệ thống</p>
+            <p class="text-xl text-slate-400 group-hover:text-emerald-400 transition-colors font-bold">Thả file <span class="underline">dump.cs</span> vào đây</p>
+            <p class="text-[10px] text-slate-600 mt-4 uppercase font-bold tracking-widest italic">Tự động nhận diện đa tài nguyên (Vàng, Ruby, Kim cương...) và Anti-Ban</p>
         </div>
 
         <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700"></div>
@@ -39,58 +35,54 @@
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
-        const manualSearch = document.getElementById('manualSearch');
-        const searchBtn = document.getElementById('searchBtn');
 
-        let currentContent = "";
-
-        // DANH SÁCH NHÓM TÍNH NĂNG "VUA" - FULL TIỀN & KIM CƯƠNG
-        const categories = [
+        // DANH SÁCH TỪ KHÓA TÀI NGUYÊN - SẼ TÁC RIÊNG THÀNH TỪNG THẺ
+        const resourceKeys = ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal', 'emerald', 'sapphire', 'cash', 'stone', 'soul', 'token', 'point', 'currency'];
+        
+        // CÁC NHÓM CHỨC NĂNG KHÁC
+        const otherCategories = [
             { id: 'antiban', label: '🛡️ ANTI-BAN (BẢO MẬT)', keys: ['anticheat', 'integrity', 'detecthack', 'isbanned', 'jailbreak', 'checkintegrity'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Vô hiệu hóa quét gian lận.' },
             { id: 'shop', label: '🛒 FREE SHOP (MUA SẮM)', keys: ['get_price', 'get_cost', 'isafford', 'enoughmoney'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Mua đồ giá 0đ.' },
             { id: 'noads', label: '🚫 NO ADS (XÓA QUẢNG CÁO)', keys: ['showads', 'hasads', 'isads', 'advertisement'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Tắt toàn bộ quảng cáo.' },
-            { id: 'money', label: '💰 VÔ HẠN TIỀN/KIM CƯƠNG', keys: ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal', 'emerald', 'sapphire', 'cash', 'stone', 'soul', 'token', 'currency'], hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Tiền cực đại (999.999).' },
             { id: 'health', label: '❤️ BẤT TỬ (GOD MODE)', keys: ['hp', 'health', 'maxhealth'], hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Khóa máu không bao giờ chết.' },
-            { id: 'speed', label: '⚡ CHIẾN ĐẤU/SIÊU TỐC', keys: ['speed', 'velocity', 'movespeed', 'cooldown', 'attackspeed', 'atk'], hex: '00 00 A0 41 C0 03 5F D6', desc: 'Hack tốc độ & Sát thương (Float).' },
-            { id: 'vip', label: '🌟 VIP/PREMIUM UNLOCKED', keys: ['isvip', 'ispremium', 'isunlocked', 'haspaid'], hex: '20 00 80 D2 C0 03 5F D6', desc: 'Mở khóa đặc quyền trả phí.' }
+            { id: 'vip', label: '🌟 VIP/PREMIUM UNLOCKED', keys: ['isvip', 'ispremium', 'isunlocked'], hex: '20 00 80 D2 C0 03 5F D6', desc: 'Mở khóa đặc quyền trả phí.' }
         ];
 
-        // DANH SÁCH ĐEN - LOẠI BỎ RÁC 100%
         const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive', 'string', 'array'];
 
         dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
-        searchBtn.onclick = () => processDump(currentContent);
 
         function handleFile(file) {
             if(!file) return;
             const reader = new FileReader();
-            reader.onload = e => {
-                currentContent = e.target.result;
-                processDump(currentContent);
-            };
+            reader.onload = e => processDump(e.target.result);
             reader.readAsText(file);
         }
 
         function processDump(content) {
-            if(!content) return;
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|show\w+)\(\)/gi;
             let match;
             let winners = {};
-
-            // Lấy từ khóa thủ công từ ô Search nếu có
-            const customKey = manualSearch.value.trim().toLowerCase();
-            if(customKey && !categories.find(c => c.id === 'custom')) {
-                categories.push({ id: 'custom', label: '🔍 TÌM THỦ CÔNG: ' + customKey.toUpperCase(), keys: [customKey], hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Tìm kiếm theo từ khóa của bạn.' });
-            }
 
             while ((match = regex.exec(content)) !== null) {
                 const rva = match[1];
                 const name = match[2];
                 const nameLower = name.toLowerCase();
 
-                if (junk.some(j => nameLower.includes(j)) || name.length > 28) continue;
+                if (junk.some(j => nameLower.includes(j)) || name.length > 30) continue;
 
-                categories.forEach(cat => {
+                // 1. XỬ LÝ TÀI NGUYÊN (TÁCH RIÊNG TỪNG TỪ KHÓA)
+                resourceKeys.forEach(key => {
+                    if (nameLower.includes(key)) {
+                        const id = 'res_' + key;
+                        if (!winners[id] || name.length < winners[id].name.length) {
+                            winners[id] = { rva, name, label: '💰 ' + key.toUpperCase(), hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Hack đơn vị tài nguyên: ' + key };
+                        }
+                    }
+                });
+
+                // 2. XỬ LÝ CÁC NHÓM KHÁC
+                otherCategories.forEach(cat => {
                     if (cat.keys.some(k => nameLower.includes(k))) {
                         if (!winners[cat.id] || name.length < winners[cat.id].name.length) {
                             winners[cat.id] = { rva, name, ...cat };
@@ -109,16 +101,23 @@
                         <span class="text-[10px] font-black text-white bg-black/40 px-3 py-1 rounded-full uppercase tracking-tighter border border-white/5">${item.label}</span>
                         <h3 class="text-xl font-bold text-white mt-4 break-all italic leading-tight">${item.name}</h3>
                         <p class="text-slate-500 text-[11px] mt-1 font-bold italic">→ ${item.desc}</p>
-                        <p class="text-rose-500 font-mono text-sm mt-4 font-black uppercase tracking-tighter">RVA: ${item.rva}</p>
+                        
+                        <div class="mt-4">
+                            <p class="text-[9px] text-gray-600 font-bold mb-1 uppercase tracking-widest">Địa chỉ RVA</p>
+                            <div class="flex gap-2">
+                                <div class="rva-box flex-1 p-2 rounded-lg text-xs font-bold text-center">${item.rva}</div>
+                                <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="bg-slate-800 hover:bg-rose-600 px-3 rounded-lg text-[10px] font-bold transition-all">COPY</button>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="mt-6 border-t border-white/5 pt-4">
-                        <p class="text-[9px] text-gray-600 font-bold mb-2 uppercase tracking-widest font-mono">Hex Patch (ARM64)</p>
-                        <div class="hex-box p-3 rounded-lg text-xs font-bold mb-4 text-center tracking-widest shadow-inner">${item.hex}</div>
-                        <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Đã Copy Hex!')" class="w-full bg-slate-800 hover:bg-white hover:text-black text-white font-bold py-3 rounded-xl transition-all shadow-lg text-[10px] uppercase tracking-widest active:scale-95">Sao chép mã</button>
+                        <p class="text-[9px] text-gray-600 font-bold mb-1 uppercase tracking-widest">Mã Hex Patch (ARM64)</p>
+                        <div class="hex-box p-3 rounded-lg text-xs font-bold mb-3 text-center tracking-widest shadow-inner">${item.hex}</div>
+                        <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Đã Copy Hex!')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-[10px] uppercase tracking-widest active:scale-95">SAO CHÉP HEX</button>
                     </div>
                 </div>
             `).join('');
-            if(data.length === 0) resultsArea.innerHTML = "<p class='col-span-full text-center text-rose-500 font-black uppercase p-10'>Không tìm thấy hàm chuẩn! Hãy thử dùng ô tìm thủ công.</p>";
         }
     </script>
 </body>

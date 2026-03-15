@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tool Dump Pro</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .box { border: 2px dashed #555; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px; cursor: pointer;}
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background: #333; color: orange; }
+        .btn { background: orange; color: black; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        pre { background: #000; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        #modal { display: none; position: fixed; top: 10%; left: 5%; width: 90%; background: #222; border: 2px solid orange; padding: 20px; z-index: 100; border-radius: 15px; box-shadow: 0 0 20px #000;}
+    </style>
+</head>
+<body>
+
+    <h2>IOS OFFSET TO C++ ANALYZER</h2>
+    <div class="box" onclick="document.getElementById('fileInput').click()">
+        Click vào đây để chọn file <b>dump.cs</b>
+        <input type="file" id="fileInput" style="display:none" onchange="processFile(this.files[0])">
+    </div>
+
+    <div id="status"></div>
+
+    <table id="resultTable" style="display:none">
+        <thead>
+            <tr>
+                <th>Tên Biến</th>
+                <th>Mã Offset</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+
+    <div id="modal">
+        <h3 style="color:orange">Code C++ Mẫu:</h3>
+        <pre id="cppCode"></pre>
+        <button class="btn" onclick="document.getElementById('modal').style.display='none'">ĐÓNG</button>
+    </div>
+
+    <script>
+        // Các từ khóa hack
+        const keys = ['health', 'hp', 'money', 'gold', 'gem', 'diamond', 'speed', 'damage', 'atk', 'vip', 'premium', 'mana'];
+
+        function processFile(file) {
+            if (!file) return;
+            document.getElementById('status').innerText = "Đang phân tích...";
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const tbody = document.getElementById('tbody');
+                tbody.innerHTML = '';
+                let count = 0;
+
+                // Quét từng dòng
+                lines.forEach(line => {
+                    // Tìm dòng chứa: public [kiểu] [tên]; // 0x...
+                    if (line.includes('// 0x')) {
+                        const parts = line.trim().split(';');
+                        if (parts.length > 1) {
+                            const infoPart = parts[0].trim(); // public float health
+                            const offsetPart = parts[1].trim(); // // 0x58
+                            
+                            const name = infoPart.split(' ').pop(); // lấy chữ health
+                            const offset = offsetPart.replace('// ', '').trim(); // lấy 0x58
+
+                            // Kiểm tra từ khóa
+                            if (keys.some(k => name.toLowerCase().includes(k))) {
+                                const row = `<tr>
+                                    <td>${name}</td>
+                                    <td style="color:yellow; font-weight:bold">${offset}</td>
+                                    <td><button class="btn" onclick="showCode('${name}', '${offset}')">LẤY CODE</button></td>
+                                </tr>`;
+                                tbody.innerHTML += row;
+                                count++;
+                            }
+                        }
+                    }
+                });
+
+                if (count > 0) {
+                    document.getElementById('resultTable').style.display = 'table';
+                    document.getElementById('status').innerText = "Tìm thấy " + count + " mục!";
+                } else {
+                    document.getElementById('status').innerText = "Không tìm thấy mục nào nhạy cảm.";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showCode(name, offset) {
+            const code = `// --- CODE MOD MENU iOS ---\n` +
+                         `// Biến: ${name}\n` +
+                         `// Offset: ${offset}\n\n` +
+                         `uintptr_t base = (uintptr_t)get_base_address(); // Thay bằng hàm lấy base của bạn\n` +
+                         `*(float*)(base + ${offset}) = 999999.0f; \n\n` +
+                         `// Lưu ý: Nếu là số nguyên hãy đổi (float*) thành (int*)`;
+            
+            document.getElementById('cppCode').innerText = code;
+            document.getElementById('modal').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

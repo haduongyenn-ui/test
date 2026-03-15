@@ -2,62 +2,44 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v6.1 - Pro Modder</title>
+    <title>Ultimate Modder - Integrity Bypass Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
+        .card { background: #0f172a; border: 1px solid #1e2937; transition: 0.3s; position: relative; overflow: hidden; }
         .card-bypass { border-left: 5px solid #a855f7; background: linear-gradient(to right, #2e1065, #0f172a); }
         .card-antiban { border-left: 5px solid #f87171; background: linear-gradient(to right, #450a0a, #0f172a); }
         .card-hack { border-left: 5px solid #10b981; }
-        .hex-select { background: #000; color: #fbbf24; border: 1px solid #334155; font-family: monospace; font-size: 11px; width: 100%; padding: 6px; border-radius: 8px; outline: none; }
+        .hex-box { font-family: 'Courier New', monospace; background: #000; color: #fbbf24; border: 1px solid #334155; }
         .rva-box { font-family: 'Courier New', monospace; background: #1e293b; color: #f43f5e; border: 1px solid #451a03; }
-        .copy-btn { @apply bg-slate-800 hover:bg-indigo-600 px-3 py-1 rounded text-[10px] font-bold transition-all active:scale-95; }
+        .copy-btn { @apply bg-slate-800 hover:bg-indigo-600 px-3 py-1 rounded-md text-[10px] font-bold transition-all active:scale-95; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter italic">Analyzer <span class="text-indigo-500">v6.1</span></h1>
-            <p class="text-indigo-400 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Integrity Bypass • Multi-Level Hack • ARM64</p>
+            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">Bypass Engine <span class="text-indigo-500">v6.0</span></h1>
+            <p class="text-indigo-400 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Integrity Check • Anti-Cheat • Multi-Resource • ARM64</p>
         </header>
 
         <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-indigo-500 transition-all cursor-pointer mb-12 shadow-2xl group">
             <p class="text-xl text-slate-400 group-hover:text-indigo-400 transition-colors font-bold italic">Thả file <span class="underline uppercase">dump.cs</span> vào đây</p>
+            <p class="text-[10px] text-slate-600 mt-4 uppercase font-bold tracking-widest italic">Tự động tìm hàm Check Integrity & Anti-Ban chuẩn nhất</p>
         </div>
 
-        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700"></div>
+        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700 text-sm"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
 
-        // THƯ VIỆN GIÁ TRỊ TÙY CHỌN
-        const hexLibrary = {
-            bool: [
-                { name: "TRUE (Bật/Bypass)", hex: "20 00 80 D2 C0 03 5F D6" },
-                { name: "FALSE (Tắt/Vô hiệu)", hex: "00 00 80 D2 C0 03 5F D6" }
-            ],
-            int: [
-                { name: "999.999 (Phổ biến)", hex: "00 E1 00 D2 C0 03 5F D6" },
-                { name: "50.000 (An toàn)", hex: "00 6D 81 D2 C0 03 5F D6" },
-                { name: "0 (Miễn phí/Reset)", hex: "00 00 80 D2 C0 03 5F D6" },
-                { name: "MAX (2 Tỷ+)", hex: "FF FF 8F D2 FF FF AF F2 C0 03 5F D6" }
-            ],
-            float: [
-                { name: "2.0f (Vừa phải)", hex: "00 00 A0 40 C0 03 5F D6" },
-                { name: "1.5f (Nhẹ)", hex: "00 00 C0 3F C0 03 5F D6" },
-                { name: "10.0f (Cực nhanh)", hex: "00 00 20 41 C0 03 5F D6" },
-                { name: "0.0f (Xóa bỏ)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" }
-            ]
-        };
-
         const categories = [
-            { id: 'bypass', label: '🛡️ INTEGRITY BYPASS', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified', 'checksum'], type: 'bool', desc: 'Vượt kiểm tra file.' },
-            { id: 'antiban', label: '🔥 ANTI-BAN / DETECT', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack'], type: 'bool', desc: 'Chống khóa tài khoản.' },
-            { id: 'res_gold', label: '💰 VÀNG / KIM CƯƠNG / RUBY', keys: ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal', 'emerald'], type: 'int', desc: 'Hack số lượng tài nguyên.' },
-            { id: 'combat', label: '⚔️ HP / SPEED / DAMAGE', keys: ['hp', 'health', 'speed', 'atk', 'damage'], type: 'float', desc: 'Sức mạnh (Float).' }
+            { id: 'bypass', label: '🛡️ INTEGRITY BYPASS (VƯỢT RÀO)', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified', 'filesizecheck', 'validatesignature', 'checksum', 'integritycheck'], hex: '20 00 80 D2 C0 03 5F D6', desc: 'Ép hàm kiểm tra file luôn trả về TRUE (Hợp lệ).' },
+            { id: 'antiban', label: '🔥 ANTI-BAN & CHEAT DETECT', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack', 'isemulator', 'rootcheck'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Ép hàm quét gian lận về FALSE (An toàn).' },
+            { id: 'shop', label: '🛒 FREE SHOP / PRICE', keys: ['get_price', 'get_cost', 'isafford'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Mua đồ giá 0đ.' },
+            { id: 'res_gold', label: '💰 VÀNG / KIM CƯƠNG / RUBY', keys: ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal', 'emerald'], hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Hack số lượng tài nguyên.' },
+            { id: 'combat', label: '⚔️ HP / SPEED / DAMAGE', keys: ['hp', 'health', 'speed', 'movespeed', 'atk', 'damage'], hex: '00 00 A0 41 C0 03 5F D6', desc: 'Sức mạnh nhân vật (Float).' }
         ];
 
         const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive', 'string', 'array'];
@@ -72,16 +54,19 @@
         }
 
         function processDump(content) {
-            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|verify\w+)\(\)/gi;
-            let match, winners = {};
+            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|verify\w+|validate\w+)\(\)/gi;
+            let match;
+            let winners = {};
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], name = match[2], nameLower = name.toLowerCase();
+                const rva = match[1];
+                const name = match[2];
+                const nameLower = name.toLowerCase();
+
                 if (junk.some(j => nameLower.includes(j)) || name.length > 32) continue;
 
                 categories.forEach(cat => {
                     if (cat.keys.some(k => nameLower.includes(k))) {
-                        // Logic v6: Chỉ lấy 1 hàm chuẩn nhất (ngắn nhất) cho mỗi nhóm
                         if (!winners[cat.id] || name.length < winners[cat.id].name.length) {
                             winners[cat.id] = { rva, name, ...cat };
                         }
@@ -93,37 +78,32 @@
 
         function render(data) {
             resultsArea.classList.remove('hidden');
-            resultsArea.innerHTML = data.map(item => {
-                const options = hexLibrary[item.type];
-                return `
+            resultsArea.innerHTML = data.map(item => `
                 <div class="card ${item.id === 'bypass' ? 'card-bypass' : (item.id === 'antiban' ? 'card-antiban' : 'card-hack')} rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
                     <div>
                         <span class="text-[9px] font-black text-white bg-black/40 px-2 py-1 rounded uppercase tracking-widest border border-white/5">${item.label}</span>
                         <h3 class="text-lg font-bold text-white mt-3 break-all italic leading-tight">${item.name}</h3>
-                        <p class="text-slate-400 text-[10px] mt-1 mb-4 italic font-medium">→ ${item.desc}</p>
+                        <p class="text-slate-400 text-[10px] mt-1 italic font-medium">→ ${item.desc}</p>
                         
-                        <div class="mb-4">
+                        <div class="mt-4">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">Address RVA</span>
-                                <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')" class="copy-btn uppercase">Copy RVA</button>
+                                <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest font-mono italic">Address RVA</span>
+                                <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')" class="copy-btn">COPY RVA</button>
                             </div>
                             <div class="rva-box p-2 rounded-lg text-xs font-bold text-center tracking-widest">${item.rva}</div>
                         </div>
                     </div>
 
-                    <div class="mt-2 border-t border-white/5 pt-4">
-                        <p class="text-[9px] text-gray-500 font-bold mb-2 uppercase tracking-widest italic">Chọn mức Hack</p>
-                        <select class="hex-select mb-3" onchange="document.getElementById('hex-${item.rva}').innerText = this.value">
-                            ${options.map(opt => `<option value="${opt.hex}">${opt.name}</option>`).join('')}
-                        </select>
-                        <div class="flex justify-between items-center mb-1 px-1">
-                            <span class="text-[8px] text-gray-600 font-bold uppercase">Mã Hex Patch</span>
-                        </div>
-                        <div id="hex-${item.rva}" class="hex-box p-2 rounded-lg text-[10px] font-bold text-center tracking-widest mb-3">${options[0].hex}</div>
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('hex-${item.rva}').innerText); alert('Copied Hex!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-bold py-2 rounded-xl transition-all shadow-lg text-[10px] uppercase tracking-widest">SAO CHÉP HEX</button>
+                    <div class="mt-5 border-t border-white/5 pt-4">
+                         <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-mono italic italic">Patch Code</span>
+                                <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Copied Hex!')" class="copy-btn">COPY HEX</button>
+                            </div>
+                        <div class="hex-box p-2 rounded-lg text-[11px] font-bold text-center tracking-widest">${item.hex}</div>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
+            if(data.length === 0) alert("Không tìm thấy hàm chuẩn!");
         }
     </script>
 </body>

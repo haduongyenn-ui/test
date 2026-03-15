@@ -2,46 +2,50 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v10.1 - Ultimate Full Scanner</title>
+    <title>Analyzer v11.0 - Auto Labeler</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.5); }
-        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 1rem; transition: 0.2s; }
-        .card:hover { border-color: #6366f1; transform: translateY(-2px); }
-        .rva-box { font-family: monospace; background: #000; color: #f43f5e; border: 1px solid #1e293b; }
-        .hex-display { font-family: monospace; color: #6366f1; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; font-size: 10px; }
+        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 2px solid rgba(255,255,255,0.05); background: #0f172a; }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1rem; position: relative; overflow: hidden; }
+        .rva-text { font-family: 'Courier New', Courier, monospace; color: #f43f5e; font-weight: 900; }
+        .tag { position: absolute; top: 0; right: 0; padding: 2px 10px; font-size: 9px; font-weight: 900; text-transform: uppercase; border-bottom-left-radius: 10px; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-4 font-sans">
 
     <div class="max-w-[1600px] mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-black text-white uppercase italic">Ultimate Scanner <span class="text-indigo-500">v10.1</span></h1>
-            <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-[0.5em]">Tối Đa Mục Tiêu • Càn Quét RVA • Full Logic</p>
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-black text-white uppercase italic tracking-tighter">Labeler <span class="text-indigo-500">v11.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-2 uppercase tracking-[0.4em]">Phân Tách Công Dụng • Chỉ Lấy Hàm Chuẩn</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-2xl p-8 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-8">
-            <p class="text-slate-400 font-bold uppercase tracking-widest">Thả file <span class="text-indigo-500">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-10 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-10">
+            <p class="text-slate-400 font-bold uppercase tracking-widest">Thả file <span class="text-indigo-500 underline">dump.cs</span> vào đây</p>
         </div>
 
-        <div id="resultsArea" class="grid grid-cols-1 gap-6"></div>
+        <div id="resultsArea" class="space-y-12"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        const scannerGroups = [
-            { id: 'int', label: '💎 INT32 (HP, MP, GOLD, LEVEL)', type: 'Int32', color: 'text-emerald-400', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'single', label: '⚡ SINGLE/FLOAT (DAME, SPEED, CD)', type: 'Single', color: 'text-sky-400', hex: "00 00 C8 42 C0 03 5F D6" },
-            { id: 'bool', label: '🛡️ BOOL (VIP, UNLOCK, ANTIBAN)', type: 'bool', color: 'text-purple-400', hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'void', label: '🚫 VOID (TAKEDAMAGE, SPEND, ANTI)', type: 'Void', color: 'text-rose-400', hex: "C0 03 5F D6" },
-            { id: 'enum', label: '🧩 ENUM (STATES, TEAMS, RANKS)', type: 'Enum', color: 'text-amber-400', hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'list', label: '📦 LIST/ARRAY (ITEMS, INVENTORY)', type: ['List', '[]'], color: 'text-cyan-400', hex: "RET (C0 03 5F D6)" },
-            { id: 'iap', label: '🛒 IAP/PURCHASE (BILLING, STORE)', type: 'Purchase', color: 'text-yellow-400', hex: "20 00 80 D2 C0 03 5F D6" }
+        // PHÂN LOẠI CÔNG DỤNG CHI TIẾT
+        const functionalGroups = [
+            { id: 'hp', label: '❤️ HP (MÁU)', color: 'bg-rose-600', text: 'text-rose-400', keys: ['hp', 'health', 'life'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'mp', label: '💧 MP (NĂNG LƯỢNG)', color: 'bg-sky-600', text: 'text-sky-400', keys: ['mp', 'mana', 'energy'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'gold', label: '💰 VÀNG (GOLD)', color: 'bg-yellow-600', text: 'text-yellow-400', keys: ['gold', 'coin', 'money'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'diamond', label: '💎 KIM CƯƠNG (DIAMOND)', color: 'bg-teal-600', text: 'text-teal-400', keys: ['diamond', 'gem', 'ruby', 'crystal'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'speed', label: '⚡ TỐC ĐỘ (SPEED)', color: 'bg-cyan-600', text: 'text-cyan-400', keys: ['speed', 'movespeed', 'velocity'], type: 'Single', hex: "00 00 C8 42 C0 03 5F D6" },
+            { id: 'cooldown', label: '⏳ HỒI CHIÊU (COOLDOWN)', color: 'bg-blue-600', text: 'text-blue-400', keys: ['cooldown', 'skilldelay', 'cd'], type: 'Single', hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" },
+            { id: 'iap', label: '🛒 MUA HÀNG (IAP/FREE SHOP)', color: 'bg-purple-600', text: 'text-purple-400', keys: ['purchase', 'buy', 'isunlocked', 'ispurchased', 'price', 'cost'], type: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'antiban', label: '🛡️ ANTIBAN & BẢO MẬT', color: 'bg-orange-600', text: 'text-orange-400', keys: ['ban', 'integrity', 'cheat', 'hack', 'detect'], type: 'bool', hex: "00 00 80 D2 C0 03 5F D6" }
         ];
+
+        // LỌC BỎ CÁC HÀM HỆ THỐNG GÂY NHIỄU (Như Compare, CompareTo)
+        const systemJunk = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -62,20 +66,10 @@
                 const name = match[3];
                 const nameL = name.toLowerCase();
 
-                // Lọc hằng số quan trọng (Chấp nhận tất cả mục tiêu chiến đấu)
-                const keywords = ['hp', 'health', 'mp', 'mana', 'gold', 'coin', 'gem', 'diamond', 'damage', 'atk', 'attack', 'speed', 'velocity', 'move', 'cooldown', 'cd', 'delay', 'vip', 'premium', 'unlock', 'purchase', 'buy', 'price', 'cost', 'takedamage', 'spend', 'ban', 'integrity', 'cheat', 'hack', 'state', 'inventory', 'item', 'reward', 'exp'];
+                if (systemJunk.some(j => nameL.includes(j))) continue; // Loại bỏ Compare/CompareTo
 
-                if (!keywords.some(k => nameL.includes(k))) continue;
-
-                scannerGroups.forEach(group => {
-                    let typeMatch = false;
-                    if (Array.isArray(group.type)) {
-                        typeMatch = group.type.some(t => type.includes(t));
-                    } else {
-                        typeMatch = type.toLowerCase().includes(group.type.toLowerCase()) || (group.type === 'bool' && type === 'Boolean');
-                    }
-
-                    if (typeMatch || (group.id === 'iap' && nameL.includes('purchase'))) {
+                functionalGroups.forEach(group => {
+                    if (group.keys.some(k => nameL.includes(k))) {
                         const key = group.id + rva;
                         winners[key] = { rva, name, type, ...group };
                     }
@@ -86,26 +80,33 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            scannerGroups.forEach(group => {
+            functionalGroups.forEach(group => {
                 const items = data.filter(d => d.id === group.id);
                 if (items.length === 0) return;
 
                 resultsArea.insertAdjacentHTML('beforeend', `
-                    <div class="group-box">
-                        <h2 class="text-xl font-black mb-4 uppercase italic ${group.color}">${group.label} (${items.length})</h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="group-box border-l-4 ${group.id === 'hp' ? 'border-rose-500' : 'border-indigo-500'}">
+                        <h2 class="text-2xl font-black mb-6 uppercase italic ${group.text}">${group.label}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${items.map(item => `
-                                <div class="card p-4 flex flex-col justify-between">
-                                    <div class="mb-3">
-                                        <div class="text-[9px] text-slate-500 font-mono mb-1 truncate">${item.type}</div>
-                                        <div class="text-[11px] font-bold text-white break-words leading-tight">${item.name}</div>
+                                <div class="card p-5 shadow-2xl">
+                                    <span class="tag ${item.color} text-white">${item.type}</span>
+                                    <div class="mb-4">
+                                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Function Name:</div>
+                                        <div class="text-[12px] font-black text-white break-words">${item.name}</div>
                                     </div>
-                                    <div class="rva-box text-center py-1 rounded mb-3 text-[10px] font-bold">${item.rva}</div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="hex-display flex-1 text-center font-bold truncate">${item.hex}</div>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}');" class="bg-indigo-600 p-2 rounded hover:bg-white hover:text-black transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-                                        </button>
+                                    <div class="mb-4">
+                                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1 text-center">RVA Offset</div>
+                                        <div class="rva-text text-center text-lg p-2 bg-black rounded-lg border border-slate-800">${item.rva}</div>
+                                    </div>
+                                    <div class="mt-4 pt-4 border-t border-slate-800">
+                                        <div class="text-[9px] text-indigo-400 font-black mb-2 uppercase tracking-widest">Recommended Patch:</div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="bg-black/50 text-indigo-300 font-mono text-[10px] p-2 rounded flex-1 text-center border border-indigo-900/30">${item.hex}</div>
+                                            <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('RVA Copied!')" class="bg-indigo-600 hover:bg-white hover:text-black p-2 rounded-lg transition-all active:scale-90">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `).join('')}

@@ -2,10 +2,10 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate Modder - Integrity Bypass Edition v6.0</title>
+    <title>Ultimate Modder - Integrity Bypass Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card { background: #0f172a; border: 1px solid #1e2937; transition: 0.3s; position: relative; overflow: hidden; }
+        .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; position: relative; overflow: hidden; }
         .card-bypass { border-left: 5px solid #a855f7; background: linear-gradient(to right, #2e1065, #0f172a); }
         .card-antiban { border-left: 5px solid #f87171; background: linear-gradient(to right, #450a0a, #0f172a); }
         .card-hack { border-left: 5px solid #10b981; }
@@ -34,6 +34,7 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
 
+        // DANH SÁCH NHÓM TÍNH NĂNG ĐÃ NÂNG CẤP
         const categories = [
             { id: 'bypass', label: '🛡️ INTEGRITY BYPASS (VƯỢT RÀO)', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified', 'filesizecheck', 'validatesignature', 'checksum', 'integritycheck'], hex: '20 00 80 D2 C0 03 5F D6', desc: 'Ép hàm kiểm tra file luôn trả về TRUE (Hợp lệ).' },
             { id: 'antiban', label: '🔥 ANTI-BAN & CHEAT DETECT', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack', 'isemulator', 'rootcheck'], hex: '00 00 80 D2 C0 03 5F D6', desc: 'Ép hàm quét gian lận về FALSE (An toàn).' },
@@ -103,7 +104,7 @@
                     </div>
                 </div>
             `).join('');
-            if(data.length === 0) alert("Không tìm thấy hàm chuẩn!");
+            if(data.length === 0) alert("Không tìm thấy hàm chuẩn! Thử dùng ô tìm thủ công.");
         }
     </script>
 </body>

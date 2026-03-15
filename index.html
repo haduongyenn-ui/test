@@ -2,29 +2,27 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v12.0 - Final Precision</title>
+    <title>Analyzer v13.0 - The Sniper</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; border: 2px solid rgba(255,255,255,0.05); background: #0f172a; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 2px solid rgba(255,255,255,0.05); }
         .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; position: relative; transition: 0.3s; }
-        .card:hover { border-color: #6366f1; transform: translateY(-3px); }
-        .rva-display { font-family: 'Courier New', Courier, monospace; color: #f43f5e; font-size: 1.1rem; font-weight: 900; background: #000; padding: 8px; border-radius: 10px; border: 1px solid #312e81; text-align: center; }
-        .hex-code { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 5px; border-radius: 5px; font-size: 11px; text-align: center; font-weight: bold; border: 1px dashed #312e81; }
-        .badge { position: absolute; top: 0; right: 0; padding: 4px 12px; font-size: 10px; font-weight: 900; border-bottom-left-radius: 15px; color: white; text-transform: uppercase; }
+        .rva-val { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #312e81; text-align: center; display: block; width: 100%; }
+        .hex-hint { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 6px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px dashed #312e81; text-align: center; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
     <div class="max-w-[1500px] mx-auto">
         <header class="text-center mb-12">
-            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter">FINAL <span class="text-indigo-500">v12.0</span></h1>
-            <p class="text-slate-500 font-bold text-sm mt-3 uppercase tracking-[0.6em]">Chỉ Lọc Hàm Chuẩn 100% • Không Lấy Hàm Rác</p>
+            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter">SNIPER <span class="text-indigo-500">v13.0</span></h1>
+            <p class="text-slate-500 font-bold text-sm mt-3 uppercase tracking-[0.6em]">Chỉ Quét RVA Tỉ Lệ Thành Công Cao Nhất</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 hover:bg-slate-900/40 transition-all cursor-pointer mb-12 group">
-            <p class="text-2xl text-slate-500 group-hover:text-indigo-400 font-black uppercase italic tracking-widest transition-colors">Thả file <span class="text-indigo-500 underline">dump.cs</span> để quét mục tiêu</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-12 group">
+            <p class="text-2xl text-slate-500 group-hover:text-indigo-400 font-black uppercase italic tracking-widest">Thả file <span class="text-indigo-500 underline">dump.cs</span> vào đây</p>
         </div>
 
         <div id="resultsArea" class="space-y-16"></div>
@@ -34,17 +32,17 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // CHỈ CÁC HÀM 100% THÀNH CÔNG
-        const targetGroups = [
-            { id: 'hp_mp', label: '❤️ HP & MP (MÁU/NĂNG LƯỢNG)', color: 'bg-rose-600', text: 'text-rose-500', keys: ['maxhp', 'maxhealth', 'maxmp', 'maxmana', 'hprecovery'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'money', label: '💰 VÀNG & KIM CƯƠNG', color: 'bg-yellow-600', text: 'text-yellow-500', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'iap', label: '🛒 FREE SHOP & VIP (IAP)', color: 'bg-purple-600', text: 'text-purple-500', keys: ['price', 'cost', 'isvip', 'ispremium', 'isunlocked', 'ispurchased'], hex: "20 00 80 D2 C0 03 5F D6 (BẬT VIP)" },
-            { id: 'antiban', label: '🛡️ ANTIBAN & BYPASS', color: 'bg-orange-600', text: 'text-orange-500', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'isjailbroken'], hex: "00 00 80 D2 C0 03 5F D6 (TẮT)" },
-            { id: 'speed_cd', label: '⚡ SPEED & HỒI CHIÊU', color: 'bg-cyan-600', text: 'text-cyan-500', keys: ['movespeed', 'attackspeed', 'cooldown', 'skilldelay'], hex: "0.0f: 00 00 20 D2 00 00 28 1E C0 03 5F D6" },
-            { id: 'void_block', label: '🚫 HÀM CHẶN (BẤT TỬ/FREE)', color: 'bg-slate-600', text: 'text-slate-400', keys: ['takedamage', 'ondamage', 'spendgold', 'usemana'], hex: "RET: C0 03 5F D6" }
+        const highSuccessGroups = [
+            { id: 'money', label: '💰 NHÓM TIỀN TỆ (VÀNG/KIM CƯƠNG)', color: 'text-yellow-500', keys: ['get_gold', 'get_coin', 'get_diamond', 'get_gem', 'get_ruby'], hex: "00 E1 00 D2 C0 03 5F D6 (999.999)" },
+            { id: 'hpmp', label: '❤️ NHÓM HP & MP (BẤT TỬ/VÔ HẠN)', color: 'text-rose-500', keys: ['get_maxhp', 'get_maxhealth', 'get_maxmp', 'get_maxmana', 'takedamage'], hex: "HP/MP: 00 E1 00 D2... | TakeDamage: C0 03 5F D6" },
+            { id: 'antiban', label: '🛡️ NHÓM ANTIBAN (BYPASS/BẢO MẬT)', color: 'text-orange-500', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'isjailbroken', 'isroot'], hex: "00 00 80 D2 C0 03 5F D6 (FALSE)" },
+            { id: 'iap', label: '🛒 NHÓM IAP (FREE SHOP/VIP)', color: 'text-purple-500', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'get_price', 'get_cost'], hex: "20 00 80 D2 C0 03 5F D6 (TRUE)" },
+            { id: 'combat', label: '⚔️ NHÓM DAMAGE & HỒI CHIÊU', color: 'text-sky-500', keys: ['get_damagemultiplier', 'get_attackpower', 'get_cooldown', 'get_skilldelay'], hex: "Dame: 00 00 C8 42... | CD: 00 00 20 D2..." },
+            { id: 'ads', label: '🚫 NHÓM BỎ ADS (QUẢNG CÁO)', color: 'text-slate-400', keys: ['hasads', 'showads', 'isadavailable'], hex: "00 00 80 D2 C0 03 5F D6 (FALSE)" }
         ];
 
-        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose', 'identity', 'width', 'height'];
+        // Lọc cực gắt để bỏ hàm rác
+        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose', 'width', 'height', 'color', 'particle'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -65,10 +63,10 @@
                 const name = match[3];
                 const nameL = name.toLowerCase();
 
-                if (blacklist.some(b => nameL.includes(b)) || name.length > 30) continue;
+                if (blacklist.some(b => nameL.includes(b)) || nameL.length < 4) continue;
 
-                targetGroups.forEach(group => {
-                    if (group.keys.some(k => nameL.includes(k))) {
+                highSuccessGroups.forEach(group => {
+                    if (group.keys.some(k => nameL === k || (nameL.includes(k) && nameL.startsWith('get_')) || (group.id === 'hpmp' && nameL === 'takedamage'))) {
                         const key = group.id + rva;
                         winners[key] = { rva, name, type, ...group };
                     }
@@ -79,29 +77,29 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            targetGroups.forEach(group => {
+            highSuccessGroups.forEach(group => {
                 const items = data.filter(d => d.id === group.id);
                 if (items.length === 0) return;
 
                 resultsArea.insertAdjacentHTML('beforeend', `
                     <div class="group-box">
-                        <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest ${group.text}">${group.label}</h2>
+                        <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest ${group.color}">${group.label}</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             ${items.map(item => `
-                                <div class="card p-6 shadow-2xl">
-                                    <span class="badge ${item.color}">${item.type}</span>
+                                <div class="card p-6 shadow-2xl flex flex-col justify-between">
                                     <div class="mb-6">
-                                        <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Tên hàm (Function):</p>
-                                        <h3 class="text-[13px] font-black text-white leading-tight break-words">${item.name}</h3>
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Target Function:</p>
+                                        <h3 class="text-[14px] font-black text-white leading-tight break-all">${item.name}</h3>
+                                        <span class="text-[9px] text-indigo-400 font-mono">${item.type}</span>
                                     </div>
                                     <div class="mb-6">
-                                        <p class="text-[9px] text-slate-500 font-bold uppercase mb-2 text-center">RVA Offset chuẩn</p>
-                                        <div class="rva-display">${item.rva}</div>
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-2 text-center">RVA OFFSET</p>
+                                        <span class="rva-val">${item.rva}</span>
                                     </div>
                                     <div class="pt-4 border-t border-slate-800">
-                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase tracking-tighter">Mã Hex khuyên dùng:</p>
-                                        <div class="hex-code mb-4">${item.hex}</div>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px] tracking-[0.2em]">Copy RVA</button>
+                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase text-center">Patch Hex Code:</p>
+                                        <div class="hex-hint mb-4">${item.hex}</div>
+                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px]">Copy RVA</button>
                                     </div>
                                 </div>
                             `).join('')}

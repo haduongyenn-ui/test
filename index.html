@@ -2,61 +2,48 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v9.0 - Precision Offset</title>
+    <title>Analyzer v10.1 - Ultimate Full Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; border: 2px solid; }
-        .card { background: #111827; border: 1px solid #374151; transition: 0.3s; }
-        .hex-select { background: #000; color: #fbbf24; border: 1px solid #1e293b; font-size: 11px; width: 100%; padding: 8px; border-radius: 8px; outline: none; }
+        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.5); }
+        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 1rem; transition: 0.2s; }
+        .card:hover { border-color: #6366f1; transform: translateY(-2px); }
         .rva-box { font-family: monospace; background: #000; color: #f43f5e; border: 1px solid #1e293b; }
-        .copy-btn { @apply bg-slate-800 hover:bg-white hover:text-black px-3 py-1 rounded text-[10px] font-bold transition-all; }
-        .title-tag { @apply text-2xl font-black mb-8 uppercase italic tracking-tighter; }
+        .hex-display { font-family: monospace; color: #6366f1; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; font-size: 10px; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-6 font-sans">
+<body class="bg-[#020617] text-slate-300 p-4 font-sans">
 
-    <div class="max-w-7xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-5xl font-black text-white uppercase italic tracking-tighter">Precision <span class="text-indigo-500">v9.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-2 uppercase tracking-[0.4em]">Tách biệt 100% RVA • Không gộp nhóm • ARM64</p>
+    <div class="max-w-[1600px] mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-black text-white uppercase italic">Ultimate Scanner <span class="text-indigo-500">v10.1</span></h1>
+            <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-[0.5em]">Tối Đa Mục Tiêu • Càn Quét RVA • Full Logic</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-indigo-500 transition-all cursor-pointer mb-12 shadow-2xl group">
-            <p class="text-xl text-slate-400 group-hover:text-indigo-400 transition-colors font-bold uppercase italic tracking-widest text-center">Thả file <span class="text-indigo-500 underline uppercase">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-2xl p-8 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-8">
+            <p class="text-slate-400 font-bold uppercase tracking-widest">Thả file <span class="text-indigo-500">dump.cs</span> vào đây</p>
         </div>
 
-        <div id="resultsArea"></div>
+        <div id="resultsArea" class="grid grid-cols-1 gap-6"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        const hexLibrary = {
-            bool: [{ name: "TRUE (Bật)", hex: "20 00 80 D2 C0 03 5F D6" }, { name: "FALSE (Tắt)", hex: "00 00 80 D2 C0 03 5F D6" }],
-            int: [{ name: "999.999", hex: "00 E1 00 D2 C0 03 5F D6" }, { name: "0", hex: "00 00 80 D2 C0 03 5F D6" }],
-            float: [{ name: "100.0f (Mạnh)", hex: "00 00 C8 42 C0 03 5F D6" }, { name: "2.0f (Vừa)", hex: "00 00 A0 40 C0 03 5F D6" }],
-            cooldown: [{ name: "0.0f (Hồi ngay)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" }]
-        };
-
-        // CẤU HÌNH TÁCH BIỆT HOÀN TOÀN (KHÔNG GỘP)
-        const preciseGroups = [
-            { id: 'bypass', label: '🛡️ BYPASS INTEGRITY', color: 'text-purple-400', border: 'border-purple-500/30', keys: ['checkintegrity', 'verifyfile', 'hashcheck'], type: 'bool' },
-            { id: 'antiban', label: '🔥 ANTI-BAN', color: 'text-orange-500', border: 'border-orange-500/30', keys: ['isbanned', 'detecthack', 'jailbreak'], type: 'bool' },
-            { id: 'hp', label: '❤️ HP (MÁU)', color: 'text-rose-500', border: 'border-rose-500/30', keys: ['hp', 'health', 'life'], type: 'int' },
-            { id: 'mp', label: '💧 MP (NĂNG LƯỢNG)', color: 'text-sky-500', border: 'border-sky-500/30', keys: ['mp', 'mana', 'energy'], type: 'int' },
-            { id: 'dame', label: '⚔️ DAMAGE (SÁT THƯƠNG)', color: 'text-red-500', border: 'border-red-500/30', keys: ['damage', 'atk', 'attackpower'], type: 'float' },
-            { id: 'speed', label: '⚡ SPEED (TỐC ĐỘ)', color: 'text-cyan-400', border: 'border-cyan-400/30', keys: ['speed', 'movespeed', 'velocity'], type: 'float' },
-            { id: 'cooldown', label: '⏳ HỒI CHIÊU', color: 'text-blue-400', border: 'border-blue-400/30', keys: ['cooldown', 'skilldelay'], type: 'cooldown' },
-            { id: 'gold', label: '💰 VÀNG (GOLD)', color: 'text-emerald-400', border: 'border-emerald-400/30', keys: ['gold', 'coin', 'silver'], type: 'int' },
-            { id: 'diamond', label: '💎 KIM CƯƠNG', color: 'text-teal-400', border: 'border-teal-400/30', keys: ['diamond', 'gem', 'ruby', 'crystal'], type: 'int' },
-            { id: 'shop', label: '🛒 FREE SHOP', color: 'text-yellow-400', border: 'border-yellow-400/30', keys: ['get_price', 'isafford'], type: 'bool' },
-            { id: 'ads', label: '🚫 ADS (QUẢNG CÁO)', color: 'text-gray-400', border: 'border-gray-500/30', keys: ['showads', 'hasads'], type: 'bool' }
+        const scannerGroups = [
+            { id: 'int', label: '💎 INT32 (HP, MP, GOLD, LEVEL)', type: 'Int32', color: 'text-emerald-400', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'single', label: '⚡ SINGLE/FLOAT (DAME, SPEED, CD)', type: 'Single', color: 'text-sky-400', hex: "00 00 C8 42 C0 03 5F D6" },
+            { id: 'bool', label: '🛡️ BOOL (VIP, UNLOCK, ANTIBAN)', type: 'bool', color: 'text-purple-400', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'void', label: '🚫 VOID (TAKEDAMAGE, SPEND, ANTI)', type: 'Void', color: 'text-rose-400', hex: "C0 03 5F D6" },
+            { id: 'enum', label: '🧩 ENUM (STATES, TEAMS, RANKS)', type: 'Enum', color: 'text-amber-400', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'list', label: '📦 LIST/ARRAY (ITEMS, INVENTORY)', type: ['List', '[]'], color: 'text-cyan-400', hex: "RET (C0 03 5F D6)" },
+            { id: 'iap', label: '🛒 IAP/PURCHASE (BILLING, STORE)', type: 'Purchase', color: 'text-yellow-400', hex: "20 00 80 D2 C0 03 5F D6" }
         ];
 
-        dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
+        dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
         function handleFile(file) {
             if(!file) return;
@@ -66,19 +53,31 @@
         }
 
         function processDump(content) {
-            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+((?:get_|is_|check_)\w+)\(\)/gi;
+            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(/gi;
             let match, winners = {};
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], name = match[2], nameLower = name.toLowerCase();
-                if (name.length > 25) continue;
+                const rva = match[1];
+                const type = match[2];
+                const name = match[3];
+                const nameL = name.toLowerCase();
 
-                preciseGroups.forEach(group => {
-                    if (group.keys.some(k => nameLower.includes(k))) {
-                        // Tách biệt theo từng nhóm cụ thể
-                        if (!winners[group.id] || name.length < winners[group.id].name.length) {
-                            winners[group.id] = { rva, name, ...group };
-                        }
+                // Lọc hằng số quan trọng (Chấp nhận tất cả mục tiêu chiến đấu)
+                const keywords = ['hp', 'health', 'mp', 'mana', 'gold', 'coin', 'gem', 'diamond', 'damage', 'atk', 'attack', 'speed', 'velocity', 'move', 'cooldown', 'cd', 'delay', 'vip', 'premium', 'unlock', 'purchase', 'buy', 'price', 'cost', 'takedamage', 'spend', 'ban', 'integrity', 'cheat', 'hack', 'state', 'inventory', 'item', 'reward', 'exp'];
+
+                if (!keywords.some(k => nameL.includes(k))) continue;
+
+                scannerGroups.forEach(group => {
+                    let typeMatch = false;
+                    if (Array.isArray(group.type)) {
+                        typeMatch = group.type.some(t => type.includes(t));
+                    } else {
+                        typeMatch = type.toLowerCase().includes(group.type.toLowerCase()) || (group.type === 'bool' && type === 'Boolean');
+                    }
+
+                    if (typeMatch || (group.id === 'iap' && nameL.includes('purchase'))) {
+                        const key = group.id + rva;
+                        winners[key] = { rva, name, type, ...group };
                     }
                 });
             }
@@ -86,32 +85,34 @@
         }
 
         function render(data) {
-            resultsArea.innerHTML = data.map(item => `
-                <div class="group-box ${item.border} animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-xl bg-slate-900/20">
-                    <h2 class="title-tag ${item.color}">${item.label}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="card rounded-2xl p-5 shadow-2xl flex flex-col justify-between border-t-2 border-slate-700">
-                            <div>
-                                <h3 class="text-[11px] font-black text-white mb-4 italic tracking-widest uppercase">${item.name}</h3>
-                                <div class="mb-4">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">RVA Offset</span>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('RVA Copied!')" class="copy-btn uppercase">Copy RVA</button>
+            resultsArea.innerHTML = '';
+            scannerGroups.forEach(group => {
+                const items = data.filter(d => d.id === group.id);
+                if (items.length === 0) return;
+
+                resultsArea.insertAdjacentHTML('beforeend', `
+                    <div class="group-box">
+                        <h2 class="text-xl font-black mb-4 uppercase italic ${group.color}">${group.label} (${items.length})</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            ${items.map(item => `
+                                <div class="card p-4 flex flex-col justify-between">
+                                    <div class="mb-3">
+                                        <div class="text-[9px] text-slate-500 font-mono mb-1 truncate">${item.type}</div>
+                                        <div class="text-[11px] font-bold text-white break-words leading-tight">${item.name}</div>
                                     </div>
-                                    <div class="rva-box p-2 rounded-lg text-[11px] font-bold text-center tracking-widest">${item.rva}</div>
+                                    <div class="rva-box text-center py-1 rounded mb-3 text-[10px] font-bold">${item.rva}</div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="hex-display flex-1 text-center font-bold truncate">${item.hex}</div>
+                                        <button onclick="navigator.clipboard.writeText('${item.rva}');" class="bg-indigo-600 p-2 rounded hover:bg-white hover:text-black transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="mt-2 border-t border-slate-800 pt-4">
-                                <select class="hex-select mb-3" onchange="document.getElementById('hex-${item.rva}').innerText = this.value">
-                                    ${hexLibrary[item.type].map(opt => `<option value="${opt.hex}">${opt.name}</option>`).join('')}
-                                </select>
-                                <div id="hex-${item.rva}" class="text-[10px] font-mono text-center text-indigo-400 mb-4 font-bold tracking-widest">${hexLibrary[item.type][0].hex}</div>
-                                <button onclick="navigator.clipboard.writeText(document.getElementById('hex-${item.rva}').innerText); alert('Hex Copied!')" class="w-full bg-indigo-700 hover:bg-white hover:text-black text-white font-black py-2 rounded-xl transition-all text-[10px] uppercase shadow-lg tracking-widest">Copy Hex Patch</button>
-                            </div>
+                            `).join('')}
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `);
+            });
         }
     </script>
 </body>

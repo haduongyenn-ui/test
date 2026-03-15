@@ -2,27 +2,28 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v13.0 - The Sniper</title>
+    <title>Analyzer v15.0 - The Mentor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 2px solid rgba(255,255,255,0.05); }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; position: relative; transition: 0.3s; }
-        .rva-val { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #312e81; text-align: center; display: block; width: 100%; }
-        .hex-hint { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 6px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px dashed #312e81; text-align: center; }
+        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.05); }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; transition: 0.3s; position: relative; }
+        .func-desc { color: #fbbf24; font-size: 11px; font-weight: bold; margin-bottom: 10px; display: block; border-left: 2px solid #fbbf24; padding-left: 8px; }
+        .rva-val { font-family: monospace; color: #f43f5e; font-size: 1.1rem; font-weight: 900; background: #000; padding: 8px; border-radius: 10px; border: 1px solid #312e81; text-align: center; display: block; }
+        .hex-patch { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 6px; border-radius: 6px; font-size: 10px; font-weight: bold; border: 1px dashed #4338ca; text-align: center; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
     <div class="max-w-[1500px] mx-auto">
         <header class="text-center mb-12">
-            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter">SNIPER <span class="text-indigo-500">v13.0</span></h1>
-            <p class="text-slate-500 font-bold text-sm mt-3 uppercase tracking-[0.6em]">Chỉ Quét RVA Tỉ Lệ Thành Công Cao Nhất</p>
+            <h1 class="text-5xl font-black text-white uppercase italic tracking-tighter">Mentor <span class="text-indigo-500">v15.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Tự Động Giải Thích Công Dụng RVA Chuẩn 100%</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-12 group">
-            <p class="text-2xl text-slate-500 group-hover:text-indigo-400 font-black uppercase italic tracking-widest">Thả file <span class="text-indigo-500 underline">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-12">
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">Thả file <span class="text-indigo-500 underline">dump.cs</span> để phân tích</p>
         </div>
 
         <div id="resultsArea" class="space-y-16"></div>
@@ -32,17 +33,42 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        const highSuccessGroups = [
-            { id: 'money', label: '💰 NHÓM TIỀN TỆ (VÀNG/KIM CƯƠNG)', color: 'text-yellow-500', keys: ['get_gold', 'get_coin', 'get_diamond', 'get_gem', 'get_ruby'], hex: "00 E1 00 D2 C0 03 5F D6 (999.999)" },
-            { id: 'hpmp', label: '❤️ NHÓM HP & MP (BẤT TỬ/VÔ HẠN)', color: 'text-rose-500', keys: ['get_maxhp', 'get_maxhealth', 'get_maxmp', 'get_maxmana', 'takedamage'], hex: "HP/MP: 00 E1 00 D2... | TakeDamage: C0 03 5F D6" },
-            { id: 'antiban', label: '🛡️ NHÓM ANTIBAN (BYPASS/BẢO MẬT)', color: 'text-orange-500', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'isjailbroken', 'isroot'], hex: "00 00 80 D2 C0 03 5F D6 (FALSE)" },
-            { id: 'iap', label: '🛒 NHÓM IAP (FREE SHOP/VIP)', color: 'text-purple-500', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'get_price', 'get_cost'], hex: "20 00 80 D2 C0 03 5F D6 (TRUE)" },
-            { id: 'combat', label: '⚔️ NHÓM DAMAGE & HỒI CHIÊU', color: 'text-sky-500', keys: ['get_damagemultiplier', 'get_attackpower', 'get_cooldown', 'get_skilldelay'], hex: "Dame: 00 00 C8 42... | CD: 00 00 20 D2..." },
-            { id: 'ads', label: '🚫 NHÓM BỎ ADS (QUẢNG CÁO)', color: 'text-slate-400', keys: ['hasads', 'showads', 'isadavailable'], hex: "00 00 80 D2 C0 03 5F D6 (FALSE)" }
-        ];
+        // TỪ ĐIỂN GIẢI THÍCH CÔNG DỤNG (DICTIONARY)
+        const dictionary = {
+            gold: "Hack Vàng (Tiền tệ chính)",
+            coin: "Hack Xu (Tiền tệ trong trận)",
+            diamond: "Hack Kim Cương (Tiền tệ nạp)",
+            gem: "Hack Đá Quý (Tiền tệ hiếm)",
+            maxhp: "Hack Bất Tử (Máu tối đa cực lớn)",
+            maxhealth: "Hack Bất Tử (Máu tối đa cực lớn)",
+            maxmp: "Vô Hạn Năng Lượng (MP tối đa)",
+            maxmana: "Vô Hạn Năng Lượng (Mana tối đa)",
+            movespeed: "Hack Chạy Nhanh (Tốc độ di chuyển)",
+            attackspeed: "Hack Tốc Độ Đánh (Đánh cực nhanh)",
+            damagemultiplier: "Hack Sát Thương (One Hit - Nhân dame)",
+            attackpower: "Hack Sức Mạnh Tấn công",
+            cooldown: "Hack Hồi Chiêu 0s (Dùng chiêu liên tục)",
+            skilldelay: "Xóa Thời Gian Chờ Kỹ Năng",
+            isvip: "Mở Khóa Đặc Quyền VIP",
+            ispremium: "Mở Khóa Tài Khoản Premium",
+            ispurchased: "Mở Khóa Vật Phẩm (Mua Miễn Phí)",
+            isunlocked: "Mở Khóa Nhân Vật/Skin",
+            price: "Mua Đồ 0đ (Free Shop)",
+            cost: "Mua Đồ 0đ (Free Shop)",
+            isbanned: "Chặn Khóa Nick (Antiban)",
+            detectcheat: "Vô Hiệu Hóa Trình Quét Hack",
+            checkintegrity: "Bypass Kiểm Tra File (Bảo mật)",
+            hasads: "Xóa Quảng Cáo (No Ads)",
+            takedamage: "Chặn Trừ Máu (Bất Tử Tuyệt Đối)"
+        };
 
-        // Lọc cực gắt để bỏ hàm rác
-        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose', 'width', 'height', 'color', 'particle'];
+        const targetGroups = [
+            { id: 'money', label: '💰 NHÓM TIỀN TỆ', color: 'text-yellow-500', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'hpmp', label: '❤️ NHÓM HP & MP', color: 'text-rose-500', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'combat', label: '⚔️ NHÓM CHIẾN ĐẤU', color: 'text-sky-500', hex: "DAME: 00 00 C8 42... | CD: 0.0f" },
+            { id: 'iap', label: '🛒 NHÓM MUA HÀNG & VIP', color: 'text-purple-500', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'antiban', label: '🛡️ NHÓM ANTIBAN & ADS', color: 'text-orange-500', hex: "00 00 80 D2 C0 03 5F D6" }
+        ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -53,53 +79,61 @@
             reader.readAsText(file);
         }
 
+        function getDesc(name) {
+            const nameL = name.toLowerCase();
+            for (let key in dictionary) {
+                if (nameL.includes(key)) return dictionary[key];
+            }
+            return "Chỉ số nhân vật (Cần kiểm tra thêm)";
+        }
+
         function processDump(content) {
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(/gi;
             let match, winners = {};
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1];
-                const type = match[2];
-                const name = match[3];
-                const nameL = name.toLowerCase();
+                const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
+                
+                if (['compare', 'tostring', 'equals'].some(b => nameL.includes(b))) continue;
 
-                if (blacklist.some(b => nameL.includes(b)) || nameL.length < 4) continue;
+                let groupId = null;
+                if (['gold', 'coin', 'diamond', 'gem', 'ruby'].some(k => nameL.includes(k))) groupId = 'money';
+                else if (['hp', 'health', 'mp', 'mana'].some(k => nameL.includes(k) || nameL === 'takedamage')) groupId = 'hpmp';
+                else if (['damage', 'attack', 'speed', 'cooldown', 'delay'].some(k => nameL.includes(k))) groupId = 'combat';
+                else if (['vip', 'premium', 'purchased', 'unlocked', 'price', 'cost'].some(k => nameL.includes(k))) groupId = 'iap';
+                else if (['ban', 'cheat', 'integrity', 'ads'].some(k => nameL.includes(k))) groupId = 'antiban';
 
-                highSuccessGroups.forEach(group => {
-                    if (group.keys.some(k => nameL === k || (nameL.includes(k) && nameL.startsWith('get_')) || (group.id === 'hpmp' && nameL === 'takedamage'))) {
-                        const key = group.id + rva;
-                        winners[key] = { rva, name, type, ...group };
-                    }
-                });
+                if (groupId) {
+                    winners[groupId + rva] = { rva, name, type, groupId, desc: getDesc(name) };
+                }
             }
             render(Object.values(winners));
         }
 
         function render(data) {
             resultsArea.innerHTML = '';
-            highSuccessGroups.forEach(group => {
-                const items = data.filter(d => d.id === group.id);
+            targetGroups.forEach(group => {
+                const items = data.filter(d => d.groupId === group.id);
                 if (items.length === 0) return;
 
                 resultsArea.insertAdjacentHTML('beforeend', `
                     <div class="group-box">
                         <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest ${group.color}">${group.label}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${items.map(item => `
                                 <div class="card p-6 shadow-2xl flex flex-col justify-between">
-                                    <div class="mb-6">
-                                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Target Function:</p>
-                                        <h3 class="text-[14px] font-black text-white leading-tight break-all">${item.name}</h3>
-                                        <span class="text-[9px] text-indigo-400 font-mono">${item.type}</span>
+                                    <div>
+                                        <span class="func-desc">${item.desc}</span>
+                                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Tên hàm gốc:</div>
+                                        <h3 class="text-[12px] font-black text-white break-all mb-4">${item.name}</h3>
                                     </div>
-                                    <div class="mb-6">
-                                        <p class="text-[10px] text-slate-500 font-bold uppercase mb-2 text-center">RVA OFFSET</p>
+                                    <div class="mb-4">
                                         <span class="rva-val">${item.rva}</span>
                                     </div>
                                     <div class="pt-4 border-t border-slate-800">
-                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase text-center">Patch Hex Code:</p>
-                                        <div class="hex-hint mb-4">${item.hex}</div>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px]">Copy RVA</button>
+                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase italic text-center">Mã Hex khuyên dùng:</p>
+                                        <div class="hex-patch mb-4">${group.hex}</div>
+                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px]">Copy RVA</button>
                                     </div>
                                 </div>
                             `).join('')}

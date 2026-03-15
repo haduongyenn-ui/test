@@ -1,108 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Tool Dump Pro</title>
+    <title>Hex Patch Finder - Unity iOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .box { border: 2px dashed #555; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px; cursor: pointer;}
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
-        th { background: #333; color: orange; }
-        .btn { background: orange; color: black; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
-        pre { background: #000; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
-        #modal { display: none; position: fixed; top: 10%; left: 5%; width: 90%; background: #222; border: 2px solid orange; padding: 20px; z-index: 100; border-radius: 15px; box-shadow: 0 0 20px #000;}
+        .hex-code { font-family: 'Courier New', monospace; color: #facc15; font-weight: bold; }
+        .rva-addr { color: #fb7185; font-weight: bold; }
     </style>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-200 p-6">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 border-b border-gray-800 pb-4">
+            <h1 class="text-3xl font-black text-rose-500">HEX PATCH ANALYZER</h1>
+            <p class="text-gray-400 italic">Tìm RVA và gợi ý mã máy (ARM64) để Hex Edit</p>
+        </header>
 
-    <h2>IOS OFFSET TO C++ ANALYZER</h2>
-    <div class="box" onclick="document.getElementById('fileInput').click()">
-        Click vào đây để chọn file <b>dump.cs</b>
-        <input type="file" id="fileInput" style="display:none" onchange="processFile(this.files[0])">
-    </div>
+        <div id="dropZone" class="border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center bg-gray-900 hover:bg-gray-800 cursor-pointer mb-8 transition-all">
+            <p class="text-xl">Kéo file <span class="text-rose-400 font-bold">dump.cs</span> vào đây</p>
+        </div>
 
-    <div id="status"></div>
-
-    <table id="resultTable" style="display:none">
-        <thead>
-            <tr>
-                <th>Tên Biến</th>
-                <th>Mã Offset</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-    </table>
-
-    <div id="modal">
-        <h3 style="color:orange">Code C++ Mẫu:</h3>
-        <pre id="cppCode"></pre>
-        <button class="btn" onclick="document.getElementById('modal').style.display='none'">ĐÓNG</button>
+        <div id="results" class="hidden space-y-4">
+            <div class="overflow-x-auto rounded-xl border border-gray-800">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-800">
+                        <tr>
+                            <th class="p-4">Tên Hàm (Method)</th>
+                            <th class="p-4">Địa chỉ RVA</th>
+                            <th class="p-4">Mã Hex để Patch (ARM64)</th>
+                            <th class="p-4">Tác dụng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-800 bg-gray-900/50"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Các từ khóa hack
-        const keys = ['health', 'hp', 'money', 'gold', 'gem', 'diamond', 'speed', 'damage', 'atk', 'vip', 'premium', 'mana'];
+        const keywords = ['gold', 'money', 'hp', 'health', 'damage', 'atk', 'isvip', 'ispremium', 'energy', 'mana'];
+        
+        // Xử lý file
+        document.getElementById('dropZone').onclick = () => {
+            let i = document.createElement('input'); i.type = 'file';
+            i.onchange = e => handleFile(e.target.files[0]); i.click();
+        };
 
-        function processFile(file) {
-            if (!file) return;
-            document.getElementById('status').innerText = "Đang phân tích...";
-            
+        function handleFile(file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const tbody = document.getElementById('tbody');
-                tbody.innerHTML = '';
-                let count = 0;
+            reader.onload = e => {
+                const content = e.target.result;
+                // Regex tìm RVA và hàm ngay bên dưới
+                const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*(?:public|private|static|virtual)*\s+(\w+)\s+(\w+)\s*\(/gi;
+                let match, results = [];
 
-                // Quét từng dòng
-                lines.forEach(line => {
-                    // Tìm dòng chứa: public [kiểu] [tên]; // 0x...
-                    if (line.includes('// 0x')) {
-                        const parts = line.trim().split(';');
-                        if (parts.length > 1) {
-                            const infoPart = parts[0].trim(); // public float health
-                            const offsetPart = parts[1].trim(); // // 0x58
-                            
-                            const name = infoPart.split(' ').pop(); // lấy chữ health
-                            const offset = offsetPart.replace('// ', '').trim(); // lấy 0x58
+                while ((match = regex.exec(content)) !== null) {
+                    const rva = match[1];
+                    const returnType = match[2];
+                    const methodName = match[3];
 
-                            // Kiểm tra từ khóa
-                            if (keys.some(k => name.toLowerCase().includes(k))) {
-                                const row = `<tr>
-                                    <td>${name}</td>
-                                    <td style="color:yellow; font-weight:bold">${offset}</td>
-                                    <td><button class="btn" onclick="showCode('${name}', '${offset}')">LẤY CODE</button></td>
-                                </tr>`;
-                                tbody.innerHTML += row;
-                                count++;
-                            }
-                        }
+                    if (keywords.some(k => methodName.toLowerCase().includes(k))) {
+                        results.push({ rva, returnType, methodName });
                     }
-                });
-
-                if (count > 0) {
-                    document.getElementById('resultTable').style.display = 'table';
-                    document.getElementById('status').innerText = "Tìm thấy " + count + " mục!";
-                } else {
-                    document.getElementById('status').innerText = "Không tìm thấy mục nào nhạy cảm.";
                 }
+                render(results);
             };
             reader.readAsText(file);
         }
 
-        function showCode(name, offset) {
-            const code = `// --- CODE MOD MENU iOS ---\n` +
-                         `// Biến: ${name}\n` +
-                         `// Offset: ${offset}\n\n` +
-                         `uintptr_t base = (uintptr_t)get_base_address(); // Thay bằng hàm lấy base của bạn\n` +
-                         `*(float*)(base + ${offset}) = 999999.0f; \n\n` +
-                         `// Lưu ý: Nếu là số nguyên hãy đổi (float*) thành (int*)`;
-            
-            document.getElementById('cppCode').innerText = code;
-            document.getElementById('modal').style.display = 'block';
+        function render(data) {
+            document.getElementById('results').classList.remove('hidden');
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = data.map(item => {
+                let patch = "00 00 80 D2 C0 03 5F D6"; // Mặc định: return 0
+                let desc = "Trả về 0 (False)";
+
+                if (item.returnType.toLowerCase().includes('int') || item.returnType.toLowerCase().includes('float')) {
+                    patch = "00 E1 00 D2 C0 03 5F D6"; // Gợi ý return lớn (ví dụ 999)
+                    desc = "Trả về số lớn (Max)";
+                } else if (item.returnType.toLowerCase().includes('bool')) {
+                    patch = "20 00 80 D2 C0 03 5F D6"; // return 1 (True)
+                    desc = "Trả về TRUE (Bật)";
+                }
+
+                return `<tr>
+                    <td class="p-4 font-bold text-blue-300">${item.methodName}</td>
+                    <td class="p-4 rva-addr">${item.rva}</td>
+                    <td class="p-4 hex-code">${patch}</td>
+                    <td class="p-4 text-sm text-gray-400">${desc}</td>
+                </tr>`;
+            }).join('');
         }
     </script>
 </body>

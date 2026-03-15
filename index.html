@@ -2,135 +2,118 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate Modder - Multi-Hex Selector</title>
+    <title>Ultimate Modder - Unlimited Scanner v8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.3s; }
-        .card-bypass { border-left: 5px solid #a855f7; background: linear-gradient(to right, #2e1065, #0f172a); }
-        .card-antiban { border-left: 5px solid #f87171; background: linear-gradient(to right, #450a0a, #0f172a); }
-        .card-hack { border-left: 5px solid #10b981; }
-        .hex-select { background: #000; color: #fbbf24; border: 1px solid #334155; font-family: monospace; font-size: 11px; }
+        .card { background: #0f172a; border: 1px solid #1e293b; transition: 0.2s; }
+        .card:hover { border-color: #38bdf8; }
+        .hex-select { background: #000; color: #fbbf24; border: 1px solid #334155; font-family: monospace; font-size: 11px; width: 100%; padding: 5px; border-radius: 5px; }
         .rva-box { font-family: 'Courier New', monospace; background: #1e293b; color: #f43f5e; border: 1px solid #451a03; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-6 font-sans">
+<body class="bg-[#020617] text-slate-300 p-6">
 
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-black text-white uppercase italic italic tracking-tighter">Hex Selector Engine <span class="text-emerald-500">v7.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Tùy chọn giá trị Hack • Anti-Ban • Bypass Integrity</p>
+            <h1 class="text-4xl font-black text-white uppercase italic tracking-tighter">Unlimited Scanner <span class="text-sky-500">v8.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-2 uppercase tracking-[0.2em]">Tìm tất cả hàm - Tùy chọn Hex mọi giá trị</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-emerald-500 transition-all cursor-pointer mb-12 shadow-2xl group">
-            <p class="text-xl text-slate-400 group-hover:text-emerald-400 transition-colors font-bold uppercase">Thả file <span class="underline">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center bg-slate-900/30 hover:bg-slate-900 hover:border-sky-500 transition-all cursor-pointer mb-12 shadow-2xl">
+            <p class="text-xl text-slate-400 font-bold uppercase">Thả file <span class="underline">dump.cs</span> vào đây</p>
+            <p id="status" class="text-xs text-sky-500 mt-2 font-bold"></p>
         </div>
 
-        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700"></div>
+        <div class="mb-6">
+            <input type="text" id="filterInput" onkeyup="filterResults()" placeholder="Lọc nhanh kết quả (Vd: Gold, Health, Speed...)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-6 py-3 text-sm focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('results');
+        const status = document.getElementById('status');
 
-        // DANH SÁCH MÃ HEX THEO CẤP ĐỘ
-        const hexLibrary = {
-            bool: [
-                { name: "FALSE (Tắt/Vô hiệu)", hex: "00 00 80 D2 C0 03 5F D6" },
-                { name: "TRUE (Bật/Kích hoạt)", hex: "20 00 80 D2 C0 03 5F D6" }
+        // THƯ VIỆN HEX TỔNG HỢP (Dùng cho mọi thẻ)
+        const hexGroups = {
+            "Bool (Đúng/Sai)": [
+                { name: "TRUE (Bật/Bypass)", hex: "20 00 80 D2 C0 03 5F D6" },
+                { name: "FALSE (Tắt/Vô hiệu)", hex: "00 00 80 D2 C0 03 5F D6" }
             ],
-            int: [
-                { name: "Giá trị: 0", hex: "00 00 80 D2 C0 03 5F D6" },
-                { name: "Giá trị: 1.000", hex: "00 7D 80 D2 C0 03 5F D6" },
-                { name: "Giá trị: 50.000", hex: "00 6D 81 D2 C0 03 5F D6" },
-                { name: "Giá trị: 999.999", hex: "00 E1 00 D2 C0 03 5F D6" },
-                { name: "Giá trị: MAX (2 Tỷ+)", hex: "FF FF 8F D2 FF FF AF F2 C0 03 5F D6" }
+            "Integer (Số nguyên)": [
+                { name: "999.999", hex: "00 E1 00 D2 C0 03 5F D6" },
+                { name: "50.000", hex: "00 6D 81 D2 C0 03 5F D6" },
+                { name: "0 (Free/Reset)", hex: "00 00 80 D2 C0 03 5F D6" },
+                { name: "MAX (2 Tỷ+)", hex: "FF FF 8F D2 FF FF AF F2 C0 03 5F D6" }
             ],
-            float: [
-                { name: "0.0f (Mặc định/Tắt)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" },
-                { name: "1.5f (Nhẹ)", hex: "00 00 C0 3F C0 03 5F D6" },
-                { name: "2.0f (Vừa)", hex: "00 00 A0 40 C0 03 5F D6" },
+            "Float (Số thực)": [
                 { name: "10.0f (Mạnh)", hex: "00 00 20 41 C0 03 5F D6" },
-                { name: "100.0f (Cực đại)", hex: "00 00 C8 42 C0 03 5F D6" }
+                { name: "2.0f (Vừa)", hex: "00 00 A0 40 C0 03 5F D6" },
+                { name: "0.0f (Xóa)", hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" }
             ]
         };
-
-        const categories = [
-            { id: 'bypass', label: '🛡️ INTEGRITY BYPASS', keys: ['checkintegrity', 'verifyfile', 'hashcheck', 'ismodified'], type: 'bool' },
-            { id: 'antiban', label: '🔥 ANTI-BAN / DETECT', keys: ['anticheat', 'isbanned', 'jailbreak', 'detecthack'], type: 'bool' },
-            { id: 'res_gold', label: '💰 VÀNG / KIM CƯƠNG', keys: ['gold', 'money', 'coin', 'gem', 'diamond', 'ruby', 'crystal'], type: 'int' },
-            { id: 'combat', label: '⚔️ HP / SPEED / DAMAGE', keys: ['hp', 'health', 'speed', 'movespeed', 'atk', 'damage'], type: 'float' }
-        ];
-
-        const junk = ['pattern', 'decimal', 'separator', 'symbol', 'culture', 'format', 'digits', 'group', 'negative', 'positive'];
 
         dropZone.onclick = () => { let i = document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
         function handleFile(file) {
             if(!file) return;
+            status.innerText = "Đang quét toàn bộ file... vui lòng đợi";
             const reader = new FileReader();
-            reader.onload = e => processDump(e.target.result);
+            reader.onload = e => processAll(e.target.result);
             reader.readAsText(file);
         }
 
-        function processDump(content) {
-            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(?:\w+)\s+(get_\w+|check\w+|is\w+|verify\w+)\(\)/gi;
-            let match, winners = {};
+        function processAll(content) {
+            // Regex cực rộng: Tìm mọi hàm get_, is_, check_, verify_, can_
+            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(\w+)\s+((?:get_|is_|check_|verify_|can_)\w+)\(\)/gi;
+            let match, data = [];
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], name = match[2], nameLower = name.toLowerCase();
-                if (junk.some(j => nameLower.includes(j)) || name.length > 30) continue;
-
-                categories.forEach(cat => {
-                    if (cat.keys.some(k => nameLower.includes(k))) {
-                        if (!winners[cat.id] || name.length < winners[cat.id].name.length) {
-                            winners[cat.id] = { rva, name, ...cat };
-                        }
-                    }
-                });
+                data.push({ rva: match[1], type: match[2], name: match[3] });
             }
-            render(Object.values(winners));
+            
+            status.innerText = `Đã tìm thấy ${data.length} hàm có thể hack!`;
+            render(data);
         }
 
         function render(data) {
-            resultsArea.classList.remove('hidden');
-            resultsArea.innerHTML = data.map(item => {
-                const options = hexLibrary[item.type];
-                return `
-                <div class="card ${item.id === 'bypass' ? 'card-bypass' : (item.id === 'antiban' ? 'card-antiban' : 'card-hack')} rounded-2xl p-5 shadow-2xl flex flex-col">
-                    <span class="text-[9px] font-black text-white bg-black/40 px-2 py-1 rounded uppercase tracking-widest border border-white/5 w-fit">${item.label}</span>
-                    <h3 class="text-lg font-bold text-white mt-3 break-all italic leading-tight mb-4">${item.name}</h3>
-                    
-                    <div class="mb-4">
-                        <div class="flex justify-between items-center mb-1 px-1">
-                            <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Address RVA</span>
-                            <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')" class="text-[9px] text-indigo-400 font-bold hover:underline">COPY RVA</button>
+            resultsArea.innerHTML = data.map(item => `
+                <div class="card rounded-xl p-4 flex flex-col justify-between shadow-lg search-item">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[8px] font-bold text-sky-400 bg-sky-950 px-2 py-0.5 rounded uppercase">${item.type}</span>
+                            <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA')" class="text-[9px] text-gray-500 hover:text-white uppercase font-bold">Copy RVA</button>
                         </div>
-                        <div class="rva-box p-2 rounded-lg text-xs font-bold text-center tracking-widest">${item.rva}</div>
+                        <h3 class="text-sm font-bold text-white break-all mb-3">${item.name}</h3>
+                        <div class="rva-box p-1.5 rounded text-[10px] font-bold text-center tracking-widest mb-4">${item.rva}</div>
                     </div>
 
-                    <div class="mt-auto pt-4 border-t border-white/5">
-                        <p class="text-[9px] text-gray-500 font-bold mb-2 uppercase tracking-widest px-1 italic">Chọn cấp độ Hack</p>
-                        <select class="hex-select w-full p-2 rounded-lg mb-3 outline-none" id="select-${item.rva}" onchange="updateHexDisplay('${item.rva}')">
-                            ${options.map(opt => `<option value="${opt.hex}">${opt.name}</option>`).join('')}
+                    <div class="pt-3 border-t border-slate-800">
+                        <select class="hex-select mb-2" onchange="document.getElementById('hex-${item.rva}').innerText = this.value">
+                            ${Object.keys(hexGroups).map(group => `
+                                <optgroup label="${group}">
+                                    ${hexGroups[group].map(opt => `<option value="${opt.hex}">${opt.name}</option>`).join('')}
+                                </optgroup>
+                            `).join('')}
                         </select>
-                        <div class="hex-box p-2 rounded-lg text-[10px] font-bold text-center tracking-widest mb-3" id="display-${item.rva}">${options[0].hex}</div>
-                        <button onclick="copyHex('${item.rva}')" class="w-full bg-emerald-600 hover:bg-white hover:text-black text-white font-bold py-2 rounded-xl transition-all shadow-lg text-[10px] uppercase tracking-widest">SAO CHÉP HEX</button>
+                        <div id="hex-${item.rva}" class="text-[9px] font-mono text-center text-yellow-500 mb-2 font-bold">${hexGroups["Bool (Đúng/Sai)"][0].hex}</div>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('hex-${item.rva}').innerText); alert('Copied Hex')" class="w-full bg-sky-600 hover:bg-white hover:text-black text-white text-[10px] font-bold py-1.5 rounded-lg transition-all uppercase">Copy Hex</button>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
-        window.updateHexDisplay = (rva) => {
-            const select = document.getElementById(`select-${rva}`);
-            const display = document.getElementById(`display-${rva}`);
-            display.innerText = select.value;
-        };
-
-        window.copyHex = (rva) => {
-            const select = document.getElementById(`select-${rva}`);
-            navigator.clipboard.writeText(select.value);
-            alert('Đã sao chép mã Hex cấp độ bạn chọn!');
-        };
+        function filterResults() {
+            let input = document.getElementById('filterInput').value.toLowerCase();
+            let items = document.getElementsByClassName('search-item');
+            for (let i = 0; i < items.length; i++) {
+                items[i].style.display = items[i].innerText.toLowerCase().includes(input) ? "flex" : "none";
+            }
+        }
     </script>
 </body>
 </html>

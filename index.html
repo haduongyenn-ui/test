@@ -2,47 +2,47 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v17.0 - Ultimate Patcher</title>
+    <title>Analyzer v18.0 - iOS Sniper (UnityFramework)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 2px solid rgba(255,255,255,0.05); }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; transition: 0.3s; position: relative; }
-        .target-desc { color: #2dd4bf; font-size: 12px; font-weight: 900; margin-bottom: 10px; display: block; border-left: 4px solid #2dd4bf; padding-left: 10px; text-transform: uppercase; }
-        .rva-hex { font-family: monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 12px; border-radius: 12px; border: 1px solid #4338ca; text-align: center; display: block; box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.2); }
-        .path-to-fill { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 10px; border-radius: 8px; font-size: 11px; font-weight: bold; border: 1px dashed #4338ca; text-align: center; cursor: pointer; }
-        .path-to-fill:hover { background: rgba(99, 102, 241, 0.3); }
+        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1rem; position: relative; }
+        .ios-rva { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #4338ca; text-align: center; display: block; }
+        .hex-fill { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 6px; font-size: 10px; font-weight: bold; border: 1px dashed #4338ca; text-align: center; }
+        .desc-label { color: #fbbf24; font-size: 11px; font-weight: bold; border-left: 3px solid #fbbf24; padding-left: 8px; margin-bottom: 8px; display: block; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
     <div class="max-w-[1500px] mx-auto">
-        <header class="text-center mb-12">
-            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter">PATCHER <span class="text-indigo-500">v17.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.6em]">Lấy RVA Và Điền Mã Patch Dứt Điểm</p>
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-black text-white uppercase italic">iOS SNIPER <span class="text-indigo-500">v18.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Dùng Cho Filza & UnityFramework (IPA Modding)</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-12">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">Thả <span class="text-indigo-500 underline">dump.cs</span> vào đây để lấy mã điền</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-12 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-10">
+            <p class="text-xl text-slate-400 font-black uppercase italic tracking-widest text-center">Thả <span class="text-indigo-500 underline uppercase italic">dump.cs</span> vào đây để lấy Offset</p>
         </div>
 
-        <div id="resultsArea" class="space-y-16"></div>
+        <div id="resultsArea" class="space-y-12"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        const patchProfiles = [
-            { id: 'currency', label: '💰 VÀNG & KIM CƯƠNG (MONEY)', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby', 'money'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "ĐIỀN MÃ NÀY ĐỂ CÓ 999.999" },
-            { id: 'survival', label: '❤️ MÁU & NĂNG LƯỢNG (HP/MP)', keys: ['maxhp', 'maxhealth', 'maxmp', 'maxmana'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "ĐIỀN MÃ NÀY ĐỂ BẤT TỬ MÁU" },
-            { id: 'perks', label: '🛒 VIP & MỞ KHÓA (IAP/VIP)', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked'], hex: "20 00 80 D2 C0 03 5F D6", desc: "ĐIỀN MÃ NÀY ĐỂ BẬT TRUE" },
-            { id: 'security', label: '🛡️ ANTIBAN & NO ADS', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'hasads'], hex: "00 00 80 D2 C0 03 5F D6", desc: "ĐIỀN MÃ NÀY ĐỂ TẮT (FALSE)" },
-            { id: 'combat', label: '⚔️ DAMAGE & HỒI CHIÊU', keys: ['damage', 'attack', 'cooldown', 'skilldelay'], hex: "DAME: 00 00 C8 42... | CD: 0.0f", desc: "MÃ PATCH SỨC MẠNH" }
+        // DANH MỤC HÀM TỬ HUYỆT 100% TRÊN IOS
+        const iosProfiles = [
+            { id: 'money', label: '💰 TIỀN TỆ & VẬT PHẨM (MONEY)', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby', 'money', 'stone'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "HACK SỐ LƯỢNG VẬT PHẨM (999.999)" },
+            { id: 'survival', label: '❤️ HP & MP (BẤT TỬ/VÔ HẠN)', keys: ['maxhp', 'maxhealth', 'maxmp', 'maxmana', 'life'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "HACK MÁU/NĂNG LƯỢNG CỰC ĐẠI" },
+            { id: 'iap', label: '🛒 VIP & IAP (FREE SHOP)', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'price', 'cost'], hex: "20 00 80 D2 C0 03 5F D6", desc: "MỞ KHÓA VIP/MUA ĐỒ MIỄN PHÍ" },
+            { id: 'antiban', label: '🛡️ ANTIBAN & NO ADS', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'hasads', 'jailbreak'], hex: "00 00 80 D2 C0 03 5F D6", desc: "TẮT KIỂM TRA BAN/QUẢNG CÁO" },
+            { id: 'combat', label: '⚔️ DAMAGE & COOLDOWN', keys: ['damage', 'attack', 'cooldown', 'skilldelay'], hex: "DAME: 00 00 C8 42... | CD: 0.0f", desc: "HACK SỨC MẠNH CHIẾN ĐẤU" }
         ];
 
-        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'item', 'count'];
+        const blacklist = ['compare', 'tostring', 'equals', 'item', 'count', 'index'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -61,7 +61,7 @@
                 const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
                 if (blacklist.some(b => nameL.includes(b))) continue;
 
-                patchProfiles.forEach(group => {
+                iosProfiles.forEach(group => {
                     if (group.keys.some(k => nameL.includes(k))) {
                         winners[group.id + rva] = { rva, name, type, ...group };
                     }
@@ -72,29 +72,29 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            patchProfiles.forEach(group => {
+            iosProfiles.forEach(group => {
                 const items = data.filter(d => d.id === group.id);
                 if (items.length === 0) return;
 
                 resultsArea.insertAdjacentHTML('beforeend', `
                     <div class="group-box">
-                        <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest ${group.color || 'text-indigo-400'}">${group.label}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <h2 class="text-2xl font-black mb-6 uppercase italic ${group.id === 'money' ? 'text-yellow-500' : 'text-indigo-400'}">${group.label}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             ${items.map(item => `
-                                <div class="card p-6 shadow-2xl flex flex-col justify-between border-t-4 border-indigo-500">
+                                <div class="card p-5 shadow-2xl flex flex-col justify-between">
                                     <div class="mb-4">
-                                        <span class="target-desc">${item.desc}</span>
-                                        <h3 class="text-[11px] font-bold text-slate-400 break-all mb-1 uppercase">${item.name}</h3>
-                                        <div class="text-[9px] text-indigo-500 font-mono italic">${item.type}</div>
+                                        <span class="desc-label">${item.desc}</span>
+                                        <h3 class="text-[11px] font-bold text-white break-all leading-tight">${item.name}</h3>
+                                        <div class="text-[9px] text-slate-500 mt-1">${item.type}</div>
                                     </div>
-                                    <div class="mb-6">
-                                        <p class="text-[10px] text-slate-600 font-bold uppercase mb-2 text-center italic">Tìm địa chỉ này trong Hex Editor:</p>
-                                        <span class="rva-hex">${item.rva}</span>
+                                    <div class="mb-4">
+                                        <p class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center">Offset (RVA)</p>
+                                        <span class="ios-rva">${item.rva}</span>
                                     </div>
                                     <div class="pt-4 border-t border-slate-800">
-                                        <p class="text-[10px] text-teal-400 font-black mb-2 uppercase text-center">Mã Hex để điền vào:</p>
-                                        <div class="path-to-fill" onclick="navigator.clipboard.writeText('${item.hex.split('(')[0].trim()}'); alert('Đã Copy Mã Hex!')">${item.hex}</div>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full mt-4 bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px]">Copy RVA</button>
+                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase text-center italic">Mã Hex Điền Vào Filza:</p>
+                                        <div class="hex-fill mb-4">${item.hex}</div>
+                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-2 rounded-lg transition-all uppercase text-[9px]">Copy RVA</button>
                                     </div>
                                 </div>
                             `).join('')}

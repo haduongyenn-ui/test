@@ -2,47 +2,49 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v18.0 - iOS Sniper (UnityFramework)</title>
+    <title>Analyzer v19.0 - One Shot Sniper</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1rem; position: relative; }
-        .ios-rva { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #4338ca; text-align: center; display: block; }
-        .hex-fill { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 6px; font-size: 10px; font-weight: bold; border: 1px dashed #4338ca; text-align: center; }
-        .desc-label { color: #fbbf24; font-size: 11px; font-weight: bold; border-left: 3px solid #fbbf24; padding-left: 8px; margin-bottom: 8px; display: block; }
+        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; overflow: hidden; }
+        .card:hover { border-color: #6366f1; transform: scale(1.02); }
+        .hex-btn { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .rva-text { font-family: monospace; color: #f43f5e; font-weight: 900; background: #000; padding: 4px 12px; border-radius: 8px; border: 1px solid #312e81; }
+        .target-tag { position: absolute; top: 0; right: 0; background: #f59e0b; color: #000; font-size: 10px; font-weight: 900; padding: 4px 12px; border-bottom-left-radius: 15px; text-transform: uppercase; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
-    <div class="max-w-[1500px] mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-5xl font-black text-white uppercase italic">iOS SNIPER <span class="text-indigo-500">v18.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Dùng Cho Filza & UnityFramework (IPA Modding)</p>
+    <div class="max-w-[1400px] mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-black text-white italic tracking-tighter uppercase">ONE SHOT <span class="text-indigo-500">v19.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Lọc 1 RVA Chuẩn Nhất • Copy Mã Hex Dứt Điểm</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-12 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-10">
-            <p class="text-xl text-slate-400 font-black uppercase italic tracking-widest text-center">Thả <span class="text-indigo-500 underline uppercase italic">dump.cs</span> vào đây để lấy Offset</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 cursor-pointer mb-12 transition-all">
+            <p class="text-2xl text-slate-500 font-black uppercase italic">Thả file <span class="text-indigo-500 underline">dump.cs</span> vào đây</p>
         </div>
 
-        <div id="resultsArea" class="space-y-12"></div>
+        <div id="resultsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // DANH MỤC HÀM TỬ HUYỆT 100% TRÊN IOS
-        const iosProfiles = [
-            { id: 'money', label: '💰 TIỀN TỆ & VẬT PHẨM (MONEY)', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby', 'money', 'stone'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "HACK SỐ LƯỢNG VẬT PHẨM (999.999)" },
-            { id: 'survival', label: '❤️ HP & MP (BẤT TỬ/VÔ HẠN)', keys: ['maxhp', 'maxhealth', 'maxmp', 'maxmana', 'life'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "HACK MÁU/NĂNG LƯỢNG CỰC ĐẠI" },
-            { id: 'iap', label: '🛒 VIP & IAP (FREE SHOP)', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'price', 'cost'], hex: "20 00 80 D2 C0 03 5F D6", desc: "MỞ KHÓA VIP/MUA ĐỒ MIỄN PHÍ" },
-            { id: 'antiban', label: '🛡️ ANTIBAN & NO ADS', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'hasads', 'jailbreak'], hex: "00 00 80 D2 C0 03 5F D6", desc: "TẮT KIỂM TRA BAN/QUẢNG CÁO" },
-            { id: 'combat', label: '⚔️ DAMAGE & COOLDOWN', keys: ['damage', 'attack', 'cooldown', 'skilldelay'], hex: "DAME: 00 00 C8 42... | CD: 0.0f", desc: "HACK SỨC MẠNH CHIẾN ĐẤU" }
+        // BỘ LỌC 1 MỤC TIÊU CHUẨN NHẤT
+        const sniperTargets = [
+            { id: 'gold', label: 'Tiền Vàng', keys: ['get_gold', 'get_coin'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "Hack 999.999 Vàng" },
+            { id: 'gem', label: 'Kim Cương', keys: ['get_diamond', 'get_gem', 'get_ruby'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "Hack 999.999 Kim Cương" },
+            { id: 'hp', label: 'Bất Tử Máu', keys: ['get_maxhp', 'get_maxhealth'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "Máu cực đại (Bất tử)" },
+            { id: 'mana', label: 'Vô Hạn MP', keys: ['get_maxmp', 'get_maxmana'], hex: "00 E1 00 D2 C0 03 5F D6", desc: "Năng lượng vô hạn" },
+            { id: 'vip', label: 'Kích Hoạt VIP', keys: ['isvip', 'ispremium', 'ispurchased'], hex: "20 00 80 D2 C0 03 5F D6", desc: "Bật full đặc quyền VIP" },
+            { id: 'cd', label: 'Hồi Chiêu 0s', keys: ['get_cooldown', 'get_skilldelay'], hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6", desc: "Dùng chiêu liên tục" },
+            { id: 'antiban', label: 'Antiban', keys: ['isbanned', 'detectcheat'], hex: "00 00 80 D2 C0 03 5F D6", desc: "Tắt trình quét (False)" },
+            { id: 'ads', label: 'Xóa Quảng Cáo', keys: ['hasads', 'showads'], hex: "00 00 80 D2 C0 03 5F D6", desc: "Tắt quảng cáo hoàn toàn" },
+            { id: 'price', label: 'Free Shop', keys: ['get_price', 'get_cost'], hex: "00 00 80 D2 C0 03 5F D6", desc: "Mua đồ với giá 0đ" }
         ];
-
-        const blacklist = ['compare', 'tostring', 'equals', 'item', 'count', 'index'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -58,12 +60,17 @@
             let match, winners = {};
 
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
-                if (blacklist.some(b => nameL.includes(b))) continue;
+                const rva = match[1], name = match[3], nameL = name.toLowerCase();
+                
+                // Chỉ lấy các hàm bắt đầu bằng get_ hoặc is_ (Chuẩn nhất)
+                if (!nameL.startsWith('get_') && !nameL.startsWith('is_') && !nameL.includes('ads')) continue;
 
-                iosProfiles.forEach(group => {
-                    if (group.keys.some(k => nameL.includes(k))) {
-                        winners[group.id + rva] = { rva, name, type, ...group };
+                sniperTargets.forEach(target => {
+                    if (target.keys.some(k => nameL.includes(k))) {
+                        // CHỈ GIỮ LẠI 1 RVA CHO MỖI ID (Ưu tiên cái tìm thấy trước hoặc tên ngắn hơn)
+                        if (!winners[target.id]) {
+                            winners[target.id] = { rva, name, ...target };
+                        }
                     }
                 });
             }
@@ -72,32 +79,35 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            iosProfiles.forEach(group => {
-                const items = data.filter(d => d.id === group.id);
-                if (items.length === 0) return;
+            if (data.length === 0) {
+                resultsArea.innerHTML = '<p class="col-span-full text-center text-rose-500 font-bold uppercase">Không tìm thấy mục tiêu nào phù hợp!</p>';
+                return;
+            }
 
+            data.forEach(item => {
                 resultsArea.insertAdjacentHTML('beforeend', `
-                    <div class="group-box">
-                        <h2 class="text-2xl font-black mb-6 uppercase italic ${group.id === 'money' ? 'text-yellow-500' : 'text-indigo-400'}">${group.label}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            ${items.map(item => `
-                                <div class="card p-5 shadow-2xl flex flex-col justify-between">
-                                    <div class="mb-4">
-                                        <span class="desc-label">${item.desc}</span>
-                                        <h3 class="text-[11px] font-bold text-white break-all leading-tight">${item.name}</h3>
-                                        <div class="text-[9px] text-slate-500 mt-1">${item.type}</div>
-                                    </div>
-                                    <div class="mb-4">
-                                        <p class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center">Offset (RVA)</p>
-                                        <span class="ios-rva">${item.rva}</span>
-                                    </div>
-                                    <div class="pt-4 border-t border-slate-800">
-                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase text-center italic">Mã Hex Điền Vào Filza:</p>
-                                        <div class="hex-fill mb-4">${item.hex}</div>
-                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-2 rounded-lg transition-all uppercase text-[9px]">Copy RVA</button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                    <div class="card p-8 flex flex-col justify-between shadow-2xl">
+                        <span class="target-tag">${item.label}</span>
+                        <div class="mb-6">
+                            <h3 class="text-white font-black text-lg mb-1 uppercase italic">${item.label}</h3>
+                            <p class="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-4">${item.desc}</p>
+                            <div class="text-[10px] text-slate-500 font-mono break-all bg-black/30 p-2 rounded border border-slate-800 italic">Hàm: ${item.name}</div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-[9px] text-slate-600 font-black uppercase mb-2">Mã Hex Dán Vào Filza (Dứt Điểm):</p>
+                                <button onclick="navigator.clipboard.writeText('${item.hex.split('(')[0].trim()}'); alert('Đã Copy Mã HEX!')" 
+                                    class="hex-btn w-full text-white font-black py-4 rounded-xl text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all active:scale-95">
+                                    Copy Mã Hex Patch
+                                </button>
+                                <div class="text-center mt-2 text-[10px] font-mono text-slate-500">${item.hex}</div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                                <span class="text-[9px] text-slate-600 font-black uppercase">Địa chỉ RVA:</span>
+                                <span class="rva-text text-[11px] cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
+                            </div>
                         </div>
                     </div>
                 `);

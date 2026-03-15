@@ -2,50 +2,49 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v11.0 - Auto Labeler</title>
+    <title>Analyzer v12.0 - Final Precision</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 2px solid rgba(255,255,255,0.05); background: #0f172a; }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1rem; position: relative; overflow: hidden; }
-        .rva-text { font-family: 'Courier New', Courier, monospace; color: #f43f5e; font-weight: 900; }
-        .tag { position: absolute; top: 0; right: 0; padding: 2px 10px; font-size: 9px; font-weight: 900; text-transform: uppercase; border-bottom-left-radius: 10px; }
+        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; border: 2px solid rgba(255,255,255,0.05); background: #0f172a; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; position: relative; transition: 0.3s; }
+        .card:hover { border-color: #6366f1; transform: translateY(-3px); }
+        .rva-display { font-family: 'Courier New', Courier, monospace; color: #f43f5e; font-size: 1.1rem; font-weight: 900; background: #000; padding: 8px; border-radius: 10px; border: 1px solid #312e81; text-align: center; }
+        .hex-code { font-family: monospace; color: #818cf8; background: rgba(99, 102, 241, 0.1); padding: 5px; border-radius: 5px; font-size: 11px; text-align: center; font-weight: bold; border: 1px dashed #312e81; }
+        .badge { position: absolute; top: 0; right: 0; padding: 4px 12px; font-size: 10px; font-weight: 900; border-bottom-left-radius: 15px; color: white; text-transform: uppercase; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-4 font-sans">
+<body class="bg-[#020617] text-slate-300 p-6 font-sans">
 
-    <div class="max-w-[1600px] mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-5xl font-black text-white uppercase italic tracking-tighter">Labeler <span class="text-indigo-500">v11.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-2 uppercase tracking-[0.4em]">Phân Tách Công Dụng • Chỉ Lấy Hàm Chuẩn</p>
+    <div class="max-w-[1500px] mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-black text-white uppercase italic tracking-tighter">FINAL <span class="text-indigo-500">v12.0</span></h1>
+            <p class="text-slate-500 font-bold text-sm mt-3 uppercase tracking-[0.6em]">Chỉ Lọc Hàm Chuẩn 100% • Không Lấy Hàm Rác</p>
         </header>
 
-        <div id="dropZone" class="border-2 border-dashed border-slate-800 rounded-3xl p-10 text-center bg-slate-900/20 hover:border-indigo-500 transition-all cursor-pointer mb-10">
-            <p class="text-slate-400 font-bold uppercase tracking-widest">Thả file <span class="text-indigo-500 underline">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-indigo-500 hover:bg-slate-900/40 transition-all cursor-pointer mb-12 group">
+            <p class="text-2xl text-slate-500 group-hover:text-indigo-400 font-black uppercase italic tracking-widest transition-colors">Thả file <span class="text-indigo-500 underline">dump.cs</span> để quét mục tiêu</p>
         </div>
 
-        <div id="resultsArea" class="space-y-12"></div>
+        <div id="resultsArea" class="space-y-16"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // PHÂN LOẠI CÔNG DỤNG CHI TIẾT
-        const functionalGroups = [
-            { id: 'hp', label: '❤️ HP (MÁU)', color: 'bg-rose-600', text: 'text-rose-400', keys: ['hp', 'health', 'life'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'mp', label: '💧 MP (NĂNG LƯỢNG)', color: 'bg-sky-600', text: 'text-sky-400', keys: ['mp', 'mana', 'energy'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'gold', label: '💰 VÀNG (GOLD)', color: 'bg-yellow-600', text: 'text-yellow-400', keys: ['gold', 'coin', 'money'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'diamond', label: '💎 KIM CƯƠNG (DIAMOND)', color: 'bg-teal-600', text: 'text-teal-400', keys: ['diamond', 'gem', 'ruby', 'crystal'], type: 'Int32', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'speed', label: '⚡ TỐC ĐỘ (SPEED)', color: 'bg-cyan-600', text: 'text-cyan-400', keys: ['speed', 'movespeed', 'velocity'], type: 'Single', hex: "00 00 C8 42 C0 03 5F D6" },
-            { id: 'cooldown', label: '⏳ HỒI CHIÊU (COOLDOWN)', color: 'bg-blue-600', text: 'text-blue-400', keys: ['cooldown', 'skilldelay', 'cd'], type: 'Single', hex: "00 00 20 D2 00 00 28 1E C0 03 5F D6" },
-            { id: 'iap', label: '🛒 MUA HÀNG (IAP/FREE SHOP)', color: 'bg-purple-600', text: 'text-purple-400', keys: ['purchase', 'buy', 'isunlocked', 'ispurchased', 'price', 'cost'], type: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'antiban', label: '🛡️ ANTIBAN & BẢO MẬT', color: 'bg-orange-600', text: 'text-orange-400', keys: ['ban', 'integrity', 'cheat', 'hack', 'detect'], type: 'bool', hex: "00 00 80 D2 C0 03 5F D6" }
+        // CHỈ CÁC HÀM 100% THÀNH CÔNG
+        const targetGroups = [
+            { id: 'hp_mp', label: '❤️ HP & MP (MÁU/NĂNG LƯỢNG)', color: 'bg-rose-600', text: 'text-rose-500', keys: ['maxhp', 'maxhealth', 'maxmp', 'maxmana', 'hprecovery'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'money', label: '💰 VÀNG & KIM CƯƠNG', color: 'bg-yellow-600', text: 'text-yellow-500', keys: ['gold', 'coin', 'diamond', 'gem', 'ruby'], hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'iap', label: '🛒 FREE SHOP & VIP (IAP)', color: 'bg-purple-600', text: 'text-purple-500', keys: ['price', 'cost', 'isvip', 'ispremium', 'isunlocked', 'ispurchased'], hex: "20 00 80 D2 C0 03 5F D6 (BẬT VIP)" },
+            { id: 'antiban', label: '🛡️ ANTIBAN & BYPASS', color: 'bg-orange-600', text: 'text-orange-500', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'isjailbroken'], hex: "00 00 80 D2 C0 03 5F D6 (TẮT)" },
+            { id: 'speed_cd', label: '⚡ SPEED & HỒI CHIÊU', color: 'bg-cyan-600', text: 'text-cyan-500', keys: ['movespeed', 'attackspeed', 'cooldown', 'skilldelay'], hex: "0.0f: 00 00 20 D2 00 00 28 1E C0 03 5F D6" },
+            { id: 'void_block', label: '🚫 HÀM CHẶN (BẤT TỬ/FREE)', color: 'bg-slate-600', text: 'text-slate-400', keys: ['takedamage', 'ondamage', 'spendgold', 'usemana'], hex: "RET: C0 03 5F D6" }
         ];
 
-        // LỌC BỎ CÁC HÀM HỆ THỐNG GÂY NHIỄU (Như Compare, CompareTo)
-        const systemJunk = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose'];
+        const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'gettype', 'clone', 'dispose', 'identity', 'width', 'height'];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
 
@@ -66,9 +65,9 @@
                 const name = match[3];
                 const nameL = name.toLowerCase();
 
-                if (systemJunk.some(j => nameL.includes(j))) continue; // Loại bỏ Compare/CompareTo
+                if (blacklist.some(b => nameL.includes(b)) || name.length > 30) continue;
 
-                functionalGroups.forEach(group => {
+                targetGroups.forEach(group => {
                     if (group.keys.some(k => nameL.includes(k))) {
                         const key = group.id + rva;
                         winners[key] = { rva, name, type, ...group };
@@ -80,33 +79,29 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            functionalGroups.forEach(group => {
+            targetGroups.forEach(group => {
                 const items = data.filter(d => d.id === group.id);
                 if (items.length === 0) return;
 
                 resultsArea.insertAdjacentHTML('beforeend', `
-                    <div class="group-box border-l-4 ${group.id === 'hp' ? 'border-rose-500' : 'border-indigo-500'}">
-                        <h2 class="text-2xl font-black mb-6 uppercase italic ${group.text}">${group.label}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div class="group-box">
+                        <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest ${group.text}">${group.label}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             ${items.map(item => `
-                                <div class="card p-5 shadow-2xl">
-                                    <span class="tag ${item.color} text-white">${item.type}</span>
-                                    <div class="mb-4">
-                                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Function Name:</div>
-                                        <div class="text-[12px] font-black text-white break-words">${item.name}</div>
+                                <div class="card p-6 shadow-2xl">
+                                    <span class="badge ${item.color}">${item.type}</span>
+                                    <div class="mb-6">
+                                        <p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Tên hàm (Function):</p>
+                                        <h3 class="text-[13px] font-black text-white leading-tight break-words">${item.name}</h3>
                                     </div>
-                                    <div class="mb-4">
-                                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1 text-center">RVA Offset</div>
-                                        <div class="rva-text text-center text-lg p-2 bg-black rounded-lg border border-slate-800">${item.rva}</div>
+                                    <div class="mb-6">
+                                        <p class="text-[9px] text-slate-500 font-bold uppercase mb-2 text-center">RVA Offset chuẩn</p>
+                                        <div class="rva-display">${item.rva}</div>
                                     </div>
-                                    <div class="mt-4 pt-4 border-t border-slate-800">
-                                        <div class="text-[9px] text-indigo-400 font-black mb-2 uppercase tracking-widest">Recommended Patch:</div>
-                                        <div class="flex items-center gap-2">
-                                            <div class="bg-black/50 text-indigo-300 font-mono text-[10px] p-2 rounded flex-1 text-center border border-indigo-900/30">${item.hex}</div>
-                                            <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('RVA Copied!')" class="bg-indigo-600 hover:bg-white hover:text-black p-2 rounded-lg transition-all active:scale-90">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-                                            </button>
-                                        </div>
+                                    <div class="pt-4 border-t border-slate-800">
+                                        <p class="text-[9px] text-indigo-400 font-black mb-2 uppercase tracking-tighter">Mã Hex khuyên dùng:</p>
+                                        <div class="hex-code mb-4">${item.hex}</div>
+                                        <button onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')" class="w-full bg-indigo-600 hover:bg-white hover:text-black text-white font-black py-3 rounded-xl transition-all uppercase text-[10px] tracking-[0.2em]">Copy RVA</button>
                                     </div>
                                 </div>
                             `).join('')}

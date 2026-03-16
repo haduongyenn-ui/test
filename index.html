@@ -2,65 +2,72 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v38.0 - Smart Analyst</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyzer v40.0 - The God Analyst</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 2px solid #10b981; }
+        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
         .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; }
-        .type-tag { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 5px; color: white; text-transform: uppercase; }
-        .rva-val { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 8px; border-radius: 10px; border: 1px solid #10b981; text-align: center; display: block; }
-        .desc-box { background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 8px; margin-top: 10px; border-radius: 4px; font-size: 11px; color: #10b981; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 12px; border-radius: 10px; }
+        .card:hover { border-color: #10b981; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+        .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
+        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
+        .desc-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 10px; margin: 15px 0; border-radius: 4px; font-size: 12px; color: #34d399; line-height: 1.5; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .hex-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .int { background: #059669; } .bool { background: #d97706; } .void { background: #7c3aed; } .float { background: #0891b2; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-8 font-sans">
 
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">SMART ANALYST <span class="text-emerald-500">v38.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.4em]">Tự Động Giải Thích Tính Năng Khi Patch</p>
+            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter italic">GOD ANALYST <span class="text-emerald-500">v40.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.6em]">Phân Tích Tử Huyệt • Chỉ Lọc Hàm Chuẩn () { }</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-12 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest text-center">Thả <span class="text-emerald-500 underline uppercase italic">dump.cs</span> vào để phân tích</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-20 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all group">
+            <p class="text-3xl text-slate-500 font-black uppercase italic tracking-widest group-hover:text-emerald-500">THẢ FILE <span class="underline">DUMP.CS</span> VÀO ĐÂY</p>
         </div>
 
-        <div id="resultsArea" class="space-y-12 text-left"></div>
+        <div id="resultsArea" class="space-y-16 text-left"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // DANH MỤC PHÂN TÍCH CHI TIẾT
-        const analyzerBrain = {
-            'get_gold': 'Hack Vàng: Ép chỉ số tiền vàng lên tối đa (999.999).',
-            'get_gem': 'Hack Kim Cương: Ép chỉ số đá quý lên tối đa để mua đồ shop.',
-            'get_maxhp': 'Bất Tử Máu: Tăng giới hạn máu tối đa, kết hợp với hồi máu sẽ không bao giờ chết.',
-            'get_damagemultiplier': 'One Hit: Nhân sát thương của bạn lên X lần. Patch xong đánh quái 1 phát chết luôn.',
-            'get_damagereceivedmultiplier': 'Giáp Bất Tử: Giảm hệ số nhận sát thương về 0. Quái đánh bạn sẽ không mất máu.',
-            'get_speed': 'Tốc Độ Di Chuyển: Giúp nhân vật chạy nhanh như chớp trên bản đồ.',
-            'get_movespeed': 'Tốc Độ Di Chuyển: Giúp nhân vật chạy nhanh như chớp trên bản đồ.',
-            'get_speedmax': 'Tốc Độ Tối Đa: Phá bỏ giới hạn tốc độ chạy của nhân vật.',
-            'get_damagepersecond': 'Sát Thương Theo Giây: Tăng lượng máu quái bị trừ liên tục mỗi giây.',
-            'isvip': 'Kích Hoạt VIP: Mở khóa các đặc quyền, nhân vật VIP, skin hiếm miễn phí.',
-            'ispremium': 'Kích Hoạt Premium: Mở khóa phiên bản trả phí của game.',
-            'isunlocked': 'Mở Khóa: Mở khóa toàn bộ vật phẩm, màn chơi đang bị khóa.',
-            'ispurchased': 'Bẻ Khóa Mua Hàng: Game sẽ hiểu là bạn đã thanh toán tiền thật cho món đồ này.',
-            'takedamage': 'Chặn Trừ Máu: Thoát hàm trừ máu ngay lập tức khi bị dính đòn.',
-            'isbanned': 'Antiban: Trả về giá trị "Không bị khóa", giúp lách qua trình kiểm tra của server.',
-            'detectcheat': 'Tắt Quét Hack: Làm mù trình bảo mật, giúp bạn dùng mod an toàn hơn.'
+        // TỪ ĐIỂN PHÂN TÍCH CHI TIẾT CÔNG DỤNG
+        const expertDictionary = {
+            'get_gold': 'HACK VÀNG: Ép chỉ số vàng lên 999.999. Giúp bạn mua sắm trang bị không giới hạn.',
+            'get_gem': 'HACK KIM CƯƠNG: Ép đá quý lên tối đa. Dùng để quay tướng, mở hòm hoặc mua vật phẩm Premium.',
+            'get_diamond': 'HACK KIM CƯƠNG: Ép đá quý lên tối đa. Dùng để quay tướng, mở hòm hoặc mua vật phẩm Premium.',
+            'get_maxhp': 'HACK MÁU (HP): Tăng giới hạn máu tối đa. Khi kết hợp với bất tử, thanh máu sẽ không bao giờ cạn.',
+            'get_maxhealth': 'HACK MÁU (HP): Tăng giới hạn máu tối đa. Khi kết hợp với bất tử, thanh máu sẽ không bao giờ cạn.',
+            'get_maxmp': 'HACK MANA: Tăng năng lượng tối đa để tung kỹ năng liên tục mà không lo hết Mana.',
+            'get_damagemultiplier': 'ONE HIT (Hệ số sát thương): Nhân dame của bạn lên 100 lần. Đánh phát chết luôn (One Hit Kill).',
+            'get_damagereceivedmultiplier': 'BẤT TỬ (Hệ số nhận dame): Giảm sát thương kẻ địch đánh vào về 0. Bạn sẽ trở nên BẤT TỬ.',
+            'get_speed': 'TỐC ĐỘ: Tăng tốc độ di chuyển của nhân vật. Giúp di chuyển cực nhanh trên bản đồ.',
+            'get_speedmultiplier': 'HỆ SỐ TỐC ĐỘ: Nhân tốc độ di chuyển lên nhiều lần. Khuyên dùng X2 hoặc X5 để tránh văng game.',
+            'get_movespeed': 'TỐC ĐỘ: Giúp nhân vật di chuyển linh hoạt và nhanh chóng hơn.',
+            'get_damagepersecond': 'DAME THEO GIÂY: Tăng lượng máu quái bị trừ mỗi giây. Rút máu Boss cực nhanh.',
+            'isvip': 'KÍCH HOẠT VIP: Mở khóa đặc quyền hội viên, skin hiếm và các vật phẩm giới hạn miễn phí.',
+            'ispremium': 'BẢN QUYỀN PREMIUM: Mở khóa toàn bộ tính năng trả phí trong game.',
+            'isunlocked': 'MỞ KHÓA TẤT CẢ: Mở khóa toàn bộ nhân vật, màn chơi và vật phẩm đang bị khóa.',
+            'ispurchased': 'HACK MUA HÀNG: Game sẽ hiểu là bạn đã mua gói nạp này rồi (Bypass IAP).',
+            'takedamage': 'CHẶN TRỪ MÁU: Ngăn game thực hiện bước trừ máu khi bạn bị trúng đòn (Bất tử Void).',
+            'isbanned': 'ANTIBAN: Trả về kết quả "Sạch". Giúp lách qua trình kiểm tra tài khoản của server.',
+            'detectcheat': 'TẮT QUÉT HACK: Làm mù trình bảo mật của game, giúp dùng Mod an toàn hơn.'
         };
 
         const catalog = [
-            { id: 'currency', label: '💰 TÀI NGUYÊN (Int)', keys: ['gold', 'coin', 'gem', 'diamond', 'money'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'stats', label: '❤️ CHỈ SỐ (Int)', keys: ['hp', 'health', 'mp', 'mana'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'logic', label: '🛡️ ĐIỀU KIỆN (Bool)', keys: ['vip', 'premium', 'purchased', 'unlocked'], type: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'combat', label: '⚔️ SỨC MẠNH (Float)', keys: ['damage', 'attack', 'speed', 'multiplier', 'persecond'], type: 'float', hex: "00 00 C8 42 C0 03 5F D6" },
-            { id: 'action', label: '🚫 HÀNH ĐỘNG (Void)', keys: ['takedamage', 'spend', 'use'], type: 'void', hex: "C0 03 5F D6" },
-            { id: 'security', label: '🛡️ BẢO MẬT (Antiban)', keys: ['banned', 'detect', 'check'], type: 'bool', hex: "00 00 80 D2 C0 03 5F D6" }
+            { id: 'money', label: '💰 TÀI NGUYÊN (INT32)', keys: ['gold', 'coin', 'gem', 'diamond', 'money'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'stats', label: '❤️ CHỈ SỐ (INT32)', keys: ['hp', 'health', 'mp', 'mana'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'logic', label: '🛡️ VIP & MỞ KHÓA (BOOL)', keys: ['vip', 'premium', 'purchased', 'unlocked'], type: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'combat', label: '⚔️ SỨC MẠNH & TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier', 'persecond'], type: 'float', hex: "00 00 C8 42 C0 03 5F D6" },
+            { id: 'voids', label: '🚫 HÀNH ĐỘNG (VOID PATCH)', keys: ['takedamage', 'spend', 'use', 'onhit'], type: 'void', hex: "C0 03 5F D6" },
+            { id: 'security', label: '🛡️ ANTIBAN & BẢO MẬT (BOOL)', keys: ['banned', 'detect', 'check', 'integrity'], type: 'bool', hex: "00 00 80 D2 C0 03 5F D6" }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -73,13 +80,14 @@
         }
 
         function processDump(content) {
+            // Regex siêu chuẩn cho: public (static) type Name() { }
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(\)\s*\{\s*\}/gi;
             let rawMatches = []; let match;
             while ((match = regex.exec(content)) !== null) {
                 rawMatches.push({ rva: match[1], type: match[2], name: match[3], nameL: match[3].toLowerCase() });
             }
 
-            let finalWinners = {};
+            let results = {};
             catalog.forEach(rule => {
                 let filtered = rawMatches.filter(m => {
                     const tL = m.type.toLowerCase();
@@ -91,9 +99,9 @@
                     const nameOk = rule.keys.some(k => m.nameL.includes(k));
                     return typeOk && nameOk;
                 });
-                if (filtered.length > 0) finalWinners[rule.id] = filtered;
+                if (filtered.length > 0) results[rule.id] = filtered;
             });
-            render(finalWinners);
+            render(results);
         }
 
         function render(data) {
@@ -106,17 +114,18 @@
                         <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">${rule.label}</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             ${items.map(item => {
-                                const analysis = analyzerBrain[item.nameL] || 'Hàm quan trọng: Dùng để điều chỉnh chỉ số game tương ứng.';
+                                const analysis = expertDictionary[item.nameL] || 'Hàm quan trọng: Cần can thiệp RVA này để thay đổi chỉ số tương ứng trong game.';
                                 return `
                                 <div class="card p-6 shadow-2xl">
-                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'bg-emerald-600' : (item.type.toLowerCase().includes('void') ? 'bg-purple-600' : (item.type.toLowerCase().includes('bool') ? 'bg-amber-600' : 'bg-cyan-600'))}">${item.type}</span>
-                                    <div class="mb-4 text-[11px] font-black text-white italic uppercase">${item.name}()</div>
+                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
+                                    <div class="mb-4 text-[11px] font-black text-white italic uppercase break-all">${item.name}()</div>
                                     <div class="desc-box">💡 ${analysis}</div>
-                                    <div class="my-6">
-                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center">Address Filza:</div>
-                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</span>
+                                    <div class="mb-6">
+                                        <div class="text-[10px] text-slate-600 font-bold uppercase mb-2 text-center">Địa chỉ RVA (Dùng trong Filza):</div>
+                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
                                     </div>
-                                    <button onclick="navigator.clipboard.writeText('${rule.hex}'); alert('Copied Hex!')" class="hex-btn active:scale-95 text-[10px] uppercase tracking-widest">Copy Hex Patch</button>
+                                    <button onclick="navigator.clipboard.writeText('${rule.hex}'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95">Copy Mã Hex Dứt Điểm</button>
+                                    <div class="text-center text-[9px] text-slate-500 font-mono mt-3 italic">Mã gợi ý: ${rule.hex}</div>
                                 </div>`;
                             }).join('')}
                         </div>

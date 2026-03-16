@@ -2,17 +2,18 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v41.0 - Universal Translator</title>
+    <title>Analyzer v42.0 - The Final Judge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; }
+        .group-box { border-radius: 2.5rem; padding: 2.5rem; margin-bottom: 3.5rem; background: #0f172a; border: 2px solid #10b981; position: relative; }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; overflow: hidden; }
+        .card:hover { border-color: #10b981; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
         .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
-        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
-        .desc-box { background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; line-height: 1.6; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; }
+        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 12px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
+        .analysis-box { background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; line-height: 1.6; color: #34d399; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; text-transform: uppercase; }
         .int { background: #059669; } .bool { background: #d97706; } .void { background: #7c3aed; } .float { background: #0891b2; }
     </style>
 </head>
@@ -20,12 +21,12 @@
 
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">UNIVERSAL <span class="text-emerald-500">TRANSLATOR</span> v41.0</h1>
-            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.5em]">Tự Động Phân Tích & Dịch Thuật Mọi Hàm Tử Huyệt</p>
+            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter italic">FINAL JUDGE <span class="text-emerald-500">v42.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.6em]">Lọc 1 RVA Chuẩn Nhất • Phân Nhóm • Phân Tích Chi Tiết</p>
         </header>
 
         <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-20 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> VÀO ĐỂ DỊCH HÀM</p>
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> VÀO ĐỂ GIÁM ĐỊNH</p>
         </div>
 
         <div id="resultsArea" class="space-y-16 text-left"></div>
@@ -35,50 +36,26 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // HÀM DỊCH THUẬT VÀ PHÂN TÍCH TỰ ĐỘNG
-        function translateFunction(name, type) {
-            const n = name.toLowerCase();
-            const t = type.toLowerCase();
-            
-            // 1. Phân tích theo từ khóa cụ thể (Từ điển ưu tiên)
-            const dictionary = {
-                'gold': 'TIỀN VÀNG', 'gem': 'KIM CƯƠNG', 'diamond': 'KIM CƯƠNG', 'coin': 'TIỀN XU',
-                'hp': 'MÁU', 'health': 'MÁU', 'mp': 'NĂNG LƯỢNG', 'mana': 'PHÁP LỰC',
-                'damage': 'SÁT THƯƠNG', 'attack': 'TẤN CÔNG', 'speed': 'TỐC ĐỘ',
-                'multiplier': 'HỆ SỐ NHÂN', 'received': 'NHẬN VÀO', 'persecond': 'MỖI GIÂY',
-                'isvip': 'TRẠNG THÁI VIP', 'ispurchased': 'TRẠNG THÁI MUA', 'unlocked': 'MỞ KHÓA'
-            };
+        // BỘ NÃO PHÂN TÍCH VÀ GỢI Ý HEX
+        const judgeBrain = {
+            'gold': { desc: 'Hack Vàng: Ép chỉ số vàng tối đa. Patch xong mua đồ thoải mái.', hex: '00 E1 00 D2 C0 03 5F D6' },
+            'gem': { desc: 'Hack Kim Cương: Ép đá quý tối đa. Dùng để quay tướng hoặc mở rương.', hex: '00 E1 00 D2 C0 03 5F D6' },
+            'hp': { desc: 'Bất Tử Máu: Tăng máu tối đa lên cực đại. Bạn sẽ không bao giờ cạn máu.', hex: '00 E1 00 D2 C0 03 5F D6' },
+            'mp': { desc: 'Mana Vô Hạn: Sử dụng kỹ năng liên tục không tốn năng lượng.', hex: '00 E1 00 D2 C0 03 5F D6' },
+            'vip': { desc: 'Kích Hoạt VIP: Mở khóa các đặc quyền hội viên và skin giới hạn.', hex: '20 00 80 D2 C0 03 5F D6' },
+            'damage': { desc: 'One Hit (x100): Nhân sát thương đầu ra gấp 100 lần. Đánh phát chết luôn.', hex: '00 00 C8 42 C0 03 5F D6' },
+            'speed': { desc: 'Speed Hack: Chạy nhanh như chớp. Khuyên dùng mức x5 để tránh văng game.', hex: '00 00 A0 40 C0 03 5F D6' },
+            'received': { desc: 'Giáp Bất Tử: Nhân sát thương nhận vào với 0. Kẻ địch đánh không mất máu.', hex: '00 00 00 2D C0 03 5F D6' },
+            'takedamage': { desc: 'Chặn Sát Thương: Thoát hàm trừ máu ngay lập tức khi bị đánh.', hex: 'C0 03 5F D6' },
+            'antiban': { desc: 'Antiban: Trả về kết quả Sạch để server không quét thấy bản Mod.', hex: '00 00 80 D2 C0 03 5F D6' }
+        };
 
-            let mainSubject = "";
-            for (let key in dictionary) {
-                if (n.includes(key)) { mainSubject = dictionary[key]; break; }
-            }
-
-            // 2. Logic giải thích theo kiểu dữ liệu và cấu trúc hàm
-            let actionText = "";
-            if (t.includes('int')) {
-                actionText = `Khi Patch: Ép chỉ số ${mainSubject || 'này'} lên mức tối đa (999.999).`;
-            } else if (t.includes('bool')) {
-                if (n.includes('ban') || n.includes('cheat')) {
-                    actionText = `Khi Patch (False): Vô hiệu hóa tính năng ${mainSubject || 'kiểm tra'} này để tránh bị phát hiện.`;
-                } else {
-                    actionText = `Khi Patch (True): Kích hoạt vĩnh viễn tính năng ${mainSubject || 'này'}.`;
-                }
-            } else if (t.includes('void')) {
-                actionText = `Khi Patch (RET): Chặn đứng hành động ${mainSubject || 'này'} (Ví dụ: Chặn bị quái đánh trúng).`;
-            } else if (t.includes('float') || t.includes('single')) {
-                if (n.includes('received')) {
-                    actionText = `Khi Patch (0.0): Giảm hệ số ${mainSubject || 'này'} về 0 để được Bất Tử.`;
-                } else {
-                    actionText = `Khi Patch (100.0): Nhân hệ số ${mainSubject || 'này'} lên cực đại (Gấp 100 lần).`;
-                }
-            }
-
-            return `⚡ <b>Công dụng:</b> Điều chỉnh <b>${mainSubject || name}</b>.<br>🎯 <b>Hậu quả:</b> ${actionText}`;
-        }
-
-        const catalog = [
-            { id: 'all', label: '🚀 DANH SÁCH HÀM TỬ HUYỆT (ĐÃ PHÂN TÍCH)', keys: ['gold', 'coin', 'gem', 'diamond', 'money', 'hp', 'health', 'mp', 'mana', 'vip', 'premium', 'purchased', 'unlocked', 'damage', 'attack', 'speed', 'multiplier', 'persecond', 'takedamage', 'isbanned', 'detectcheat'], type: 'all' }
+        const config = [
+            { id: 'money', label: '💰 NHÓM TIỀN TỆ (Chuẩn Nhất)', keys: ['get_gold', 'get_coin', 'get_diamond', 'get_gem', 'get_money'], type: 'int' },
+            { id: 'stats', label: '❤️ NHÓM SINH TỒN (Chuẩn Nhất)', keys: ['get_maxhp', 'get_maxhealth', 'get_maxmp', 'get_maxmana'], type: 'int' },
+            { id: 'combat', label: '⚔️ NHÓM SỨC MẠNH (Chuẩn Nhất)', keys: ['get_damagemultiplier', 'get_damagereceivedmultiplier', 'get_speed', 'get_movespeed'], type: 'float' },
+            { id: 'vip', label: '🛒 NHÓM ĐẶC QUYỀN (Chuẩn Nhất)', keys: ['isvip', 'ispremium', 'isunlocked', 'ispurchased'], type: 'bool' },
+            { id: 'safety', label: '🛡️ NHÓM ANTIBAN (Gửi Tất Cả)', keys: ['isbanned', 'detectcheat', 'checkintegrity'], type: 'bool', single: false }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -92,45 +69,69 @@
 
         function processDump(content) {
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(\)\s*\{\s*\}/gi;
-            let found = []; let match;
+            let rawMatches = []; let match;
             while ((match = regex.exec(content)) !== null) {
-                const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
-                const isImportant = catalog[0].keys.some(k => nameL.includes(k));
-                const isValidType = ['int32', 'int', 'bool', 'boolean', 'void', 'float', 'single'].some(t => type.toLowerCase() === t);
-                
-                if (isImportant && isValidType) {
-                    found.push({ rva, type, name, analysis: translateFunction(name, type) });
-                }
+                rawMatches.push({ rva: match[1], type: match[2], name: match[3], nameL: match[3].toLowerCase() });
             }
-            render(found);
+
+            let results = {};
+            config.forEach(group => {
+                let candidates = rawMatches.filter(m => {
+                    const tL = m.type.toLowerCase();
+                    const nameOk = group.keys.some(k => m.nameL.includes(k));
+                    let typeOk = false;
+                    if (group.type === 'int') typeOk = tL === 'int32' || tL === 'int';
+                    if (group.type === 'bool') typeOk = tL === 'bool' || tL === 'boolean';
+                    if (group.type === 'float') typeOk = tL === 'single' || tL === 'float';
+                    return nameOk && typeOk;
+                });
+
+                if (candidates.length > 0) {
+                    if (group.single === false) {
+                        results[group.id] = candidates; // Giữ lại tất cả cho Antiban
+                    } else {
+                        // Lọc lấy 1 hàm chuẩn nhất cho mỗi từ khóa (Tránh trùng lặp)
+                        let uniqueOnes = [];
+                        group.keys.forEach(key => {
+                            let best = candidates.find(c => c.nameL === key); // Ưu tiên hàm khớp 100%
+                            if (!best) best = candidates.find(c => c.nameL.includes(key));
+                            if (best && !uniqueOnes.some(u => u.rva === best.rva)) uniqueOnes.push(best);
+                        });
+                        results[group.id] = uniqueOnes;
+                    }
+                }
+            });
+            render(results);
         }
 
         function render(data) {
             resultsArea.innerHTML = '';
-            if (data.length === 0) {
-                resultsArea.innerHTML = '<p class="text-center text-rose-500 font-black">KHÔNG TÌM THẤY HÀM NÀO KHỚP VỚI CẤU TRÚC TỬ HUYỆT!</p>';
-                return;
-            }
-
-            resultsArea.insertAdjacentHTML('beforeend', `
-                <div class="group-box">
-                    <h2 class="text-3xl font-black mb-10 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">PHÂN TÍCH TẤT CẢ CÁC HÀM TÌM THẤY</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${data.map(item => `
-                            <div class="card p-6 shadow-2xl">
-                                <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
-                                <div class="mb-4 text-[13px] font-black text-white italic uppercase break-all leading-tight">${item.name}()</div>
-                                <div class="desc-box">${item.analysis}</div>
-                                <div class="my-6">
-                                    <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center italic">Địa chỉ Address Filza:</div>
-                                    <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
-                                </div>
-                                <button onclick="navigator.clipboard.writeText('00 E1 00 D2 C0 03 5F D6'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95 text-[10px] uppercase tracking-widest">Copy Hex Patch</button>
-                            </div>
-                        `).join('')}
+            config.forEach(group => {
+                const items = data[group.id];
+                if (!items) return;
+                resultsArea.insertAdjacentHTML('beforeend', `
+                    <div class="group-box">
+                        <h2 class="text-3xl font-black mb-10 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">${group.label}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${items.map(item => {
+                                let info = { desc: 'Hàm quan trọng điều chỉ chỉ số game.', hex: 'C0 03 5F D6' };
+                                for (let k in judgeBrain) { if (item.nameL.includes(k)) info = judgeBrain[k]; }
+                                return `
+                                <div class="card p-6 shadow-2xl">
+                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
+                                    <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all">${item.name}()</div>
+                                    <div class="analysis-box">🎯 <b>Công dụng:</b> ${info.desc}<br>⚙️ <b>Mã Hex khuyên dùng:</b> ${info.hex}</div>
+                                    <div class="my-6">
+                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center">Địa chỉ Address Filza:</div>
+                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
+                                    </div>
+                                    <button onclick="navigator.clipboard.writeText('${info.hex}'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95 text-[10px]">Copy Mã Hex Dứt Điểm</button>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
-                </div>
-            `);
+                `);
+            });
         }
     </script>
 </body>

@@ -3,64 +3,106 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analyzer v49.2 - Visual Patcher</title>
+    <title>Analyzer v49.5 - Visual Patcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         body { background: #020617; }
-        .group-box { border-radius: 2rem; padding: 1.75rem; margin-bottom: 2rem; background: #0f172a; border: 2px solid #10b981; }
-        .card { background: linear-gradient(180deg, #020617 0%, #041022 100%); border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.25s; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-        .card:hover { border-color: #10b981; transform: translateY(-3px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12); }
-        .type-tag { position: absolute; top: 14px; right: 14px; font-size: 10px; font-weight: 900; padding: 5px 12px; border-radius: 999px; color: white; text-transform: uppercase; letter-spacing: 0.08em; }
+        .group-box { border-radius: 1.4rem; padding: 1rem; margin-bottom: 1.25rem; background: #0f172a; border: 1px solid #10b981; }
+        .card {
+            background: linear-gradient(180deg, #020617 0%, #061224 100%);
+            border: 1px solid #1e293b;
+            border-radius: 1.2rem;
+            transition: 0.22s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .card:hover { border-color: #10b981; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(16,185,129,0.10); }
+        .type-tag {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
         .int { background: #059669; }
         .bool { background: #d97706; }
         .void { background: #7c3aed; }
         .float { background: #0891b2; }
         .drop-active { border-color: #10b981 !important; transform: scale(1.01); box-shadow: 0 0 0 4px rgba(16,185,129,0.12); }
 
-        .pill { font-size: 10px; padding: 5px 10px; border-radius: 999px; background: #111827; color: #cbd5e1; border: 1px solid #334155; font-weight: 800; }
-        .stats-chip { background: #0f172a; border: 1px solid #1e293b; border-radius: 999px; padding: 10px 14px; font-weight: 800; color: #cbd5e1; }
+        .pill {
+            font-size: 10px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #111827;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            font-weight: 800;
+        }
+        .stats-chip {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 999px;
+            padding: 9px 13px;
+            font-weight: 800;
+            color: #cbd5e1;
+        }
 
         .analysis-box {
             background: linear-gradient(180deg, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.04) 100%);
             border: 1px solid rgba(16,185,129,0.22);
             border-left: 4px solid #10b981;
-            padding: 14px;
-            margin: 16px 0;
-            border-radius: 14px;
-            font-size: 13px;
-            line-height: 1.65;
+            padding: 12px;
+            margin: 14px 0;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.55;
             color: #ecfeff;
         }
-        .analysis-title {
-            font-size: 13px;
+        .analysis-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
             font-weight: 900;
             color: #ffffff;
             margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
-        .analysis-row { margin-top: 6px; color: #dbeafe; }
-        .analysis-row b { color: #ffffff; }
+        .analysis-mini {
+            display: grid;
+            gap: 6px;
+        }
+        .analysis-mini div { color: #dbeafe; }
+        .analysis-mini b { color: #ffffff; }
 
         .hex-select {
             background: #1e293b;
             color: #10b981;
             border: 1px solid #10b981;
             border-radius: 12px;
-            padding: 12px;
+            padding: 11px 12px;
             width: 100%;
             font-weight: 800;
             font-size: 13px;
             outline: none;
         }
         .code-panel {
-            margin-top: 12px;
+            margin-top: 10px;
             background: linear-gradient(180deg, #07111f 0%, #020617 100%);
             border: 1px solid #1f3a4f;
-            border-radius: 16px;
-            padding: 14px;
+            border-radius: 14px;
+            padding: 12px;
         }
         .code-label {
             font-size: 10px;
@@ -68,131 +110,121 @@
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.14em;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
         }
         .hex-display {
             font-family: 'Courier New', monospace;
             background: #000;
             color: #34d399;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
             border: 1px solid #1e293b;
             word-break: break-word;
             text-align: left;
-            line-height: 1.7;
-            min-height: 62px;
+            line-height: 1.65;
+            min-height: 54px;
         }
         .hex-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-            gap: 8px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 7px;
+            margin-top: 9px;
         }
         .hex-chunk {
             background: #08111d;
             border: 1px solid #17314a;
             color: #67e8f9;
             border-radius: 10px;
-            padding: 8px 6px;
+            padding: 7px 6px;
             text-align: center;
             font-family: 'Courier New', monospace;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
         }
         .rva-panel {
-            margin-top: 14px;
+            margin-top: 12px;
             background: linear-gradient(180deg, #10161f 0%, #050a12 100%);
             border: 1px solid #1f3a4f;
-            border-radius: 16px;
-            padding: 14px;
+            border-radius: 14px;
+            padding: 12px;
         }
         .rva-val {
             font-family: 'Courier New', monospace;
             color: #fb7185;
-            font-size: 1.35rem;
+            font-size: 1.15rem;
             font-weight: 900;
             background: #000;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid #10b981;
             text-align: center;
             display: block;
-            cursor: pointer;
             word-break: break-all;
             letter-spacing: 0.02em;
         }
-        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-        .hex-btn {
-            background: #10b981;
-            color: #000;
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 10px;
+        }
+        .hex-btn, .ghost-btn {
             font-weight: 900;
             transition: 0.2s;
             width: 100%;
-            padding: 14px;
-            border-radius: 14px;
+            padding: 12px;
+            border-radius: 12px;
             text-transform: uppercase;
-            margin-top: 10px;
-            font-size: 13px;
+            margin-top: 0;
+            font-size: 12px;
             letter-spacing: 0.03em;
         }
-        .hex-btn:hover { filter: brightness(1.05); }
-        .hex-btn:active { transform: scale(0.98); }
-        .ghost-btn {
-            background: #0f172a;
-            color: #d1fae5;
-            border: 1px solid #24556c;
-            font-weight: 900;
-            transition: 0.2s;
-            width: 100%;
-            padding: 14px;
-            border-radius: 14px;
-            text-transform: uppercase;
-            margin-top: 10px;
-            font-size: 13px;
-            letter-spacing: 0.03em;
-        }
+        .hex-btn { background: #10b981; color: #000; }
+        .ghost-btn { background: #0f172a; color: #d1fae5; border: 1px solid #24556c; }
+        .hex-btn:hover, .ghost-btn:hover { filter: brightness(1.05); }
+        .hex-btn:active, .ghost-btn:active { transform: scale(0.98); }
 
         @media (max-width: 768px) {
-            .group-box { padding: 1.2rem; border-radius: 1.5rem; }
+            .group-box { padding: 0.9rem; border-radius: 1.1rem; }
             .action-row { grid-template-columns: 1fr; }
-            .rva-val { font-size: 1.15rem; }
+            .rva-val { font-size: 1.02rem; }
         }
     </style>
 </head>
-<body class="text-slate-300 p-4 md:p-8 font-sans">
+<body class="text-slate-300 p-4 md:p-7 font-sans">
     <div class="max-w-[1600px] mx-auto text-center">
-        <header class="mb-8">
+        <header class="mb-7">
             <h1 class="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">
-                VISUAL PATCHER <span class="text-emerald-500">v49.2</span>
+                VISUAL PATCHER <span class="text-emerald-500">v49.5</span>
             </h1>
-            <p class="text-slate-500 font-bold text-[11px] mt-4 uppercase tracking-[0.35em]">
-                Analyzer • Search • Export • Better Readability
+            <p class="text-slate-500 font-bold text-[11px] mt-3 uppercase tracking-[0.35em]">
+                Compact Cards • Easy Analysis • Better Code View
             </p>
         </header>
 
-        <div class="mb-6 flex flex-col gap-4 items-center">
+        <div class="mb-5 flex flex-col gap-4 items-center">
             <input id="searchBox" type="text" placeholder="Tìm theo tên hàm / type / RVA..."
                 class="w-full max-w-3xl bg-slate-900 border border-slate-700 text-white px-5 py-4 rounded-2xl outline-none focus:border-emerald-500" />
 
             <div class="flex flex-wrap gap-3 justify-center">
-                <button id="exportJsonBtn" class="hex-btn !w-auto !mt-0 px-5 py-3 rounded-2xl">Export JSON</button>
-                <button id="exportMdBtn" class="hex-btn !w-auto !mt-0 px-5 py-3 rounded-2xl">Export MD</button>
+                <button id="exportJsonBtn" class="hex-btn !w-auto px-5 py-3 rounded-2xl">Export JSON</button>
+                <button id="exportMdBtn" class="hex-btn !w-auto px-5 py-3 rounded-2xl">Export MD</button>
                 <button id="clearBtn" class="bg-slate-800 text-slate-200 font-black px-5 py-3 rounded-2xl border border-slate-700 hover:border-emerald-500 transition">Clear</button>
             </div>
         </div>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[2.5rem] md:rounded-[3.5rem] p-10 md:p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-8 transition-all">
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[2rem] md:rounded-[3rem] p-8 md:p-14 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-7 transition-all">
             <p class="text-lg md:text-2xl text-slate-400 font-black uppercase italic tracking-widest text-center">
                 THẢ <span class="text-emerald-500 underline uppercase italic">DUMP.CS</span> HOẶC BẤM ĐỂ CHỌN
             </p>
-            <p class="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] mt-4">
+            <p class="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] mt-3">
                 Hỗ trợ .cs / .txt
             </p>
         </div>
 
-        <div id="statsBar" class="mb-8 text-slate-400 text-sm font-bold"></div>
-        <div id="resultsArea" class="space-y-10 text-left"></div>
+        <div id="statsBar" class="mb-7 text-slate-400 text-sm font-bold"></div>
+        <div id="resultsArea" class="space-y-8 text-left"></div>
     </div>
 
     <div id="toast" class="fixed bottom-6 right-6 bg-emerald-500 text-black font-black px-5 py-3 rounded-xl opacity-0 pointer-events-none transition-all duration-300 z-50">
@@ -245,6 +277,8 @@
             { id: 'money', label: '💰 NHÓM TÀI NGUYÊN (INT)', keys: ['gold', 'coin', 'diamond', 'gem', 'money'], type: 'int' },
             { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], type: 'int' },
             { id: 'combat', label: '⚔️ CHIẾN ĐẤU / TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received', 'move'], type: 'float' },
+            { id: 'cooldown', label: '⏱️ HỒI CHIÊU / DELAY (FLOAT)', keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'], type: 'float', single: false },
+            { id: 'ads', label: '📺 NHÓM ADS / QUẢNG CÁO (BOOL)', keys: ['ads', 'ad', 'advertise', 'advertisement', 'rewarded', 'interstitial', 'banner', 'videoad'], type: 'bool', single: false },
             { id: 'vip', label: '🛒 MỞ KHÓA / ĐẶC QUYỀN (BOOL)', keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'], type: 'bool' },
             { id: 'action', label: '🚫 HÀNH ĐỘNG / XỬ LÝ (VOID)', keys: ['takedamage', 'spend', 'use', 'consume', 'cost'], type: 'void' },
             { id: 'safety', label: '🛡️ KIỂM TRA / XÁC MINH (BOOL)', keys: ['banned', 'detect', 'check', 'verify', 'security'], type: 'bool', single: false }
@@ -294,73 +328,87 @@
             const rules = [
                 {
                     keys: ['gold', 'coin', 'money'],
-                    title: 'Tài nguyên thường',
-                    easy: 'Tên hàm này thường liên quan tới vàng, coin hoặc tiền cơ bản trong game.',
-                    use: 'Nó thường dùng để đọc ra số lượng tài nguyên đang có.',
-                    hint: 'Các tên như get_Gold, get_Coin, get_Money thường là các tên dễ hiểu nhất.'
+                    label: 'Tài nguyên thường',
+                    what: 'Thường là số vàng, coin hoặc tiền cơ bản trong game.',
+                    use: 'Dùng để hiển thị hoặc đọc số tài nguyên hiện có.',
+                    note: 'Ưu tiên các tên ngắn như get_Gold hoặc get_Coin vì dễ hiểu hơn.'
                 },
                 {
                     keys: ['diamond', 'gem'],
-                    title: 'Tài nguyên hiếm',
-                    easy: 'Tên hàm này thường liên quan tới kim cương, gem hoặc tiền tệ cao cấp.',
-                    use: 'Nhóm này thường gắn với shop, vật phẩm hiếm hoặc tính năng premium.',
-                    hint: 'Nếu cùng có nhiều kết quả, ưu tiên tên ngắn và rõ nghĩa hơn.'
+                    label: 'Tài nguyên hiếm',
+                    what: 'Thường là kim cương, gem hoặc tiền tệ cao cấp.',
+                    use: 'Hay liên quan tới shop, vật phẩm hiếm hoặc tính năng premium.',
+                    note: 'Nếu có nhiều kết quả, nên ưu tiên tên rõ nghĩa trước.'
                 },
                 {
                     keys: ['hp', 'health', 'life'],
-                    title: 'Máu / sinh tồn',
-                    easy: 'Tên hàm này thường liên quan tới máu, lượng sống hoặc trạng thái sinh tồn.',
-                    use: 'Nó thường tham gia vào phần hiển thị máu, tính toán sống/chết hoặc thông tin nhân vật.',
-                    hint: 'Health thường là máu hiện tại hoặc máu tối đa; Life đôi khi là số mạng.'
+                    label: 'Máu / sinh tồn',
+                    what: 'Thường là máu, lượng sống hoặc trạng thái sinh tồn.',
+                    use: 'Hay xuất hiện ở phần thông tin nhân vật, sống/chết hoặc hiển thị máu.',
+                    note: 'Life đôi khi là số mạng, không phải lúc nào cũng là HP.'
                 },
                 {
                     keys: ['mp', 'mana', 'energy'],
-                    title: 'Mana / năng lượng',
-                    easy: 'Tên hàm này thường liên quan tới mana, stamina hoặc năng lượng dùng cho kỹ năng.',
-                    use: 'Nó hay xuất hiện ở phần dùng skill, phép, hành động tiêu hao năng lượng.',
-                    hint: 'Energy đôi khi không phải mana mà là thanh hành động hoặc thể lực.'
+                    label: 'Mana / năng lượng',
+                    what: 'Thường là mana, stamina hoặc năng lượng để dùng kỹ năng.',
+                    use: 'Hay liên quan tới dùng skill, phép hoặc hành động tiêu hao năng lượng.',
+                    note: 'Energy có thể là thể lực hoặc thanh hành động, không hẳn là mana.'
                 },
                 {
                     keys: ['damage', 'attack', 'atk'],
-                    title: 'Sát thương / tấn công',
-                    easy: 'Tên hàm này thường liên quan tới chỉ số tấn công hoặc lượng sát thương.',
-                    use: 'Nó có thể là số damage cơ bản, hệ số damage hoặc thông số chiến đấu.',
-                    hint: 'Attack và Damage thường là nhóm dễ nhận diện khi đọc dump.'
+                    label: 'Sát thương / tấn công',
+                    what: 'Thường là chỉ số đánh hoặc lượng sát thương.',
+                    use: 'Hay dùng trong phần tính damage, hệ số đánh hoặc thông số chiến đấu.',
+                    note: 'Attack và Damage thường là hai từ khóa dễ nhận ra nhất.'
                 },
                 {
                     keys: ['speed', 'move', 'runspeed'],
-                    title: 'Tốc độ',
-                    easy: 'Tên hàm này thường liên quan tới tốc độ di chuyển hoặc tốc độ xử lý.',
-                    use: 'Nó có thể tham gia vào chạy, di chuyển, animation hoặc tốc độ hành động.',
-                    hint: 'Không phải Speed nào cũng là tốc độ chạy; đôi khi là tốc độ tổng quát.'
+                    label: 'Tốc độ',
+                    what: 'Thường là tốc độ di chuyển hoặc tốc độ xử lý hành động.',
+                    use: 'Có thể liên quan tới chạy, animation hoặc tốc độ tổng quát.',
+                    note: 'Không phải Speed nào cũng là tốc độ chạy.'
+                },
+                {
+                    keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'],
+                    label: 'Hồi chiêu / delay',
+                    what: 'Thường là thời gian chờ giữa các đòn đánh, kỹ năng hoặc hành động.',
+                    use: 'Hay liên quan tới hồi chiêu skill, thời gian đợi bắn tiếp, cast time hoặc khoảng chờ giữa 2 lần dùng.',
+                    note: 'Từ cd khá ngắn nên đôi khi bắt nhầm; các tên dài như cooldown, reusetime, casttime thường chuẩn hơn.'
+                },
+                {
+                    keys: ['ads', 'ad', 'advertise', 'advertisement', 'rewarded', 'interstitial', 'banner', 'videoad'],
+                    label: 'Ads / quảng cáo',
+                    what: 'Thường là các hàm kiểm tra hoặc trạng thái liên quan tới quảng cáo trong game/app.',
+                    use: 'Có thể dùng để biết quảng cáo có sẵn, đã tải xong, có thể hiện hay có thưởng hay chưa.',
+                    note: 'Từ ad khá ngắn nên đôi khi có thể dính nhầm; các tên như rewarded, interstitial, banner thường rõ hơn.'
                 },
                 {
                     keys: ['received', 'taken', 'takedamage', 'hurt'],
-                    title: 'Sát thương nhận vào',
-                    easy: 'Tên hàm này thường liên quan tới việc nhân vật bị đánh hoặc nhận sát thương.',
-                    use: 'Nó có thể nằm trong phần trừ máu, tính phòng thủ hoặc tính toán damage đầu vào.',
-                    hint: 'Nếu kiểu trả về là void, nhiều khả năng đây là hàm xử lý hành động.'
+                    label: 'Sát thương nhận vào',
+                    what: 'Thường là phần liên quan tới bị đánh hoặc nhận damage.',
+                    use: 'Hay nằm trong logic trừ máu, phòng thủ hoặc damage đầu vào.',
+                    note: 'Nếu kiểu trả về là void thì thường là hàm xử lý hành động.'
                 },
                 {
                     keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'],
-                    title: 'Mở khóa / đặc quyền',
-                    easy: 'Tên hàm này thường dùng để kiểm tra đã mở khóa, đã mua hoặc có premium chưa.',
-                    use: 'Các hàm bool ở nhóm này thường cho biết trạng thái bật / tắt của một quyền nào đó.',
-                    hint: 'Các tên bắt đầu bằng is... thường dễ đọc vì nó giống câu hỏi đúng/sai.'
+                    label: 'Mở khóa / đặc quyền',
+                    what: 'Thường là kiểm tra đã mở khóa, đã mua hoặc có premium chưa.',
+                    use: 'Thường dùng để xác định trạng thái bật / tắt của quyền nào đó.',
+                    note: 'Các tên bắt đầu bằng is... thường dễ đọc nhất.'
                 },
                 {
                     keys: ['banned', 'detect', 'check', 'verify', 'security'],
-                    title: 'Kiểm tra / xác minh',
-                    easy: 'Tên hàm này thường dùng để kiểm tra điều kiện, xác minh trạng thái hoặc logic nội bộ.',
-                    use: 'Nó không phải lúc nào cũng là kiểm tra bảo mật; nhiều khi chỉ là check trạng thái bình thường.',
-                    hint: 'Từ check hoặc detect khá chung, nên cần nhìn thêm tên đầy đủ để hiểu đúng.'
+                    label: 'Kiểm tra / xác minh',
+                    what: 'Thường là hàm kiểm tra điều kiện hoặc xác minh trạng thái.',
+                    use: 'Không phải lúc nào cũng là bảo mật; nhiều khi chỉ là check logic bình thường.',
+                    note: 'Từ check / detect khá chung nên nên nhìn cả tên đầy đủ.'
                 },
                 {
                     keys: ['spend', 'use', 'consume', 'cost'],
-                    title: 'Tiêu hao / sử dụng',
-                    easy: 'Tên hàm này thường liên quan tới việc dùng vật phẩm, trừ tài nguyên hoặc thực hiện hành động.',
-                    use: 'Đây thường là hàm xử lý logic thay vì chỉ đơn giản đọc dữ liệu.',
-                    hint: 'Nếu kiểu trả về là void thì rất có thể nó đang thực thi một hành động.'
+                    label: 'Tiêu hao / sử dụng',
+                    what: 'Thường là dùng vật phẩm, trừ tài nguyên hoặc thực hiện hành động.',
+                    use: 'Nhóm này thiên về xử lý logic hơn là chỉ đọc dữ liệu.',
+                    note: 'Nếu return là void thì rất có thể đây là hàm thực thi.'
                 }
             ];
 
@@ -374,22 +422,22 @@
 
             if (!matched) {
                 return `
-                    <div class="analysis-title">🎯 Phân tích dễ hiểu</div>
-                    <div class="analysis-row"><b>Nhóm:</b> Chưa xác định rõ</div>
-                    <div class="analysis-row"><b>Giải thích ngắn:</b> Hàm này hiện mới được nhận diện theo tên chung, chưa đủ từ khóa để xếp vào nhóm cụ thể.</div>
-                    <div class="analysis-row"><b>Kiểu trả về:</b> ${escapeHtml(tLabel)}</div>
-                    <div class="analysis-row"><b>Dễ hiểu hơn:</b> Bạn có thể xem đây là một hàm dùng để lấy dữ liệu hoặc kiểm tra trạng thái nào đó.</div>
-                    <div class="analysis-row"><b>Lưu ý:</b> Muốn hiểu chính xác hơn thì nên đọc thêm các hàm gần nó trong dump.</div>
+                    <div class="analysis-head">🎯 Phân tích nhanh</div>
+                    <div class="analysis-mini">
+                        <div><b>Là gì:</b> Chưa đủ từ khóa để xếp nhóm rõ ràng.</div>
+                        <div><b>Dùng làm gì:</b> Có thể là hàm lấy dữ liệu hoặc kiểm tra trạng thái.</div>
+                        <div><b>Lưu ý:</b> Kiểu trả về hiện tại là <b>${escapeHtml(tLabel)}</b>, nên bạn có thể dựa thêm vào type để đoán chức năng.</div>
+                    </div>
                 `;
             }
 
             return `
-                <div class="analysis-title">🎯 Phân tích dễ hiểu</div>
-                <div class="analysis-row"><b>Nhóm:</b> ${matched.title}</div>
-                <div class="analysis-row"><b>Giải thích ngắn:</b> ${matched.easy}</div>
-                <div class="analysis-row"><b>Kiểu trả về:</b> ${escapeHtml(tLabel)}</div>
-                <div class="analysis-row"><b>Nó thường dùng để làm gì:</b> ${matched.use}</div>
-                <div class="analysis-row"><b>Dấu hiệu để nhận biết:</b> ${matched.hint}</div>
+                <div class="analysis-head">🎯 Phân tích nhanh · ${matched.label}</div>
+                <div class="analysis-mini">
+                    <div><b>Là gì:</b> ${matched.what}</div>
+                    <div><b>Dùng làm gì:</b> ${matched.use}</div>
+                    <div><b>Lưu ý:</b> ${matched.note} Kiểu trả về hiện tại là <b>${escapeHtml(tLabel)}</b>.</div>
+                </div>
             `;
         }
 
@@ -409,7 +457,7 @@
                 return;
             }
             const payload = {
-                version: '49.2',
+                version: '49.5',
                 totalRawMethods: lastRawMethods.length,
                 totalMatchedMethods: lastMatchedMethods.length,
                 groups: lastRenderedData
@@ -424,7 +472,7 @@
                 return;
             }
 
-            let md = '# Visual Patcher v49.2 Report\n\n';
+            let md = '# Visual Patcher v49.5 Report\n\n';
             md += `- Total raw methods: ${lastRawMethods.length}\n`;
             md += `- Total matched methods: ${lastMatchedMethods.length}\n\n`;
 
@@ -676,14 +724,14 @@
 
                 resultsArea.insertAdjacentHTML('beforeend', `
                     <div class="group-box">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                            <h2 class="text-2xl md:text-3xl font-black uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+                            <h2 class="text-xl md:text-2xl font-black uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">
                                 ${group.label}
                             </h2>
                             <div class="text-slate-500 text-sm font-bold">Số lượng: ${items.length}</div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="grid-${groupId}">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="grid-${groupId}">
                             ${items.map(item => {
                                 const options = hexLibrary[group.type] || [];
                                 const description = getDetailedAnalysis(item.name, item.type);
@@ -695,23 +743,23 @@
                                 const chunks = chunkHex(defaultHex);
 
                                 return `
-                                <div class="card p-6 shadow-2xl">
+                                <div class="card p-4 md:p-5 shadow-2xl">
                                     <span class="type-tag ${group.type}">${escapeHtml(item.type)}</span>
 
                                     <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all leading-tight pr-20">
                                         ${escapeHtml(item.name)}()
                                     </div>
 
-                                    <div class="flex gap-2 flex-wrap mb-3">
+                                    <div class="flex gap-2 flex-wrap mb-2">
                                         <span class="pill">${escapeHtml(item.access || 'public')}</span>
                                         <span class="pill">${item.isStatic ? 'static' : 'instance'}</span>
-                                        <span class="pill">${escapeHtml(item.args ? `args: ${item.args}` : 'no args')}</span>
+                                        <span class="pill">${escapeHtml(item.args ? `args` : 'no args')}</span>
                                     </div>
 
                                     <div class="analysis-box">${description}</div>
 
                                     ${options.length ? `
-                                    <div class="mb-2">
+                                    <div class="mb-1">
                                         <div class="text-[10px] text-slate-500 font-black mb-2 uppercase tracking-[0.18em]">Giá trị mẫu</div>
                                         <select onchange="updateHexDisplay('${selectId}', '${displayId}', '${gridId}')" id="${selectId}" class="hex-select">
                                             ${options.map(o => `<option value="${escapeHtml(o.hex)}">${escapeHtml(o.val)}</option>`).join('')}
@@ -721,7 +769,7 @@
                                             <div class="code-label">Mã đầy đủ</div>
                                             <div class="hex-display" id="${displayId}">${escapeHtml(defaultHex)}</div>
 
-                                            <div class="code-label mt-3">Hiển thị dễ đọc</div>
+                                            <div class="code-label mt-3">Mã chia cụm</div>
                                             <div class="hex-grid" id="${gridId}">
                                                 ${chunks.map(p => `<div class="hex-chunk">${escapeHtml(p)}</div>`).join('')}
                                             </div>

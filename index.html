@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analyzer v49.5 - Visual Patcher</title>
+    <title>Analyzer v50.1 Smart - Visual Patcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -21,6 +21,24 @@
             overflow: hidden;
         }
         .card:hover { border-color: #10b981; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(16,185,129,0.10); }
+        .card.best-card {
+            border: 1px solid #ef4444;
+            box-shadow: 0 0 0 1px rgba(239,68,68,0.35), 0 12px 30px rgba(239,68,68,0.12);
+        }
+        .best-ribbon {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 5px 10px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            z-index: 3;
+        }
         .type-tag {
             position: absolute;
             top: 12px;
@@ -48,6 +66,15 @@
             border: 1px solid #334155;
             font-weight: 800;
         }
+        .rank-pill {
+            font-size: 10px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #3f0a0a;
+            color: #fecaca;
+            border: 1px solid #7f1d1d;
+            font-weight: 900;
+        }
         .stats-chip {
             background: #0f172a;
             border: 1px solid #1e293b;
@@ -55,6 +82,14 @@
             padding: 9px 13px;
             font-weight: 800;
             color: #cbd5e1;
+        }
+        .profile-box {
+            background: linear-gradient(180deg, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.04) 100%);
+            border: 1px solid rgba(59,130,246,0.22);
+            border-left: 4px solid #3b82f6;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 18px;
         }
 
         .analysis-box {
@@ -196,10 +231,10 @@
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-7">
             <h1 class="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">
-                VISUAL PATCHER <span class="text-emerald-500">v49.5</span>
+                VISUAL PATCHER <span class="text-emerald-500">v50.1 SMART</span>
             </h1>
             <p class="text-slate-500 font-bold text-[11px] mt-3 uppercase tracking-[0.35em]">
-                Compact Cards • Easy Analysis • Better Code View
+                Full Keyword • Smart Genre Guess • Dedup • Best Match
             </p>
         </header>
 
@@ -223,6 +258,7 @@
             </p>
         </div>
 
+        <div id="profileArea" class="text-left"></div>
         <div id="statsBar" class="mb-7 text-slate-400 text-sm font-bold"></div>
         <div id="resultsArea" class="space-y-8 text-left"></div>
     </div>
@@ -234,6 +270,7 @@
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
+        const profileArea = document.getElementById('profileArea');
         const searchBox = document.getElementById('searchBox');
         const statsBar = document.getElementById('statsBar');
         const toast = document.getElementById('toast');
@@ -244,6 +281,7 @@
         let lastRenderedData = {};
         let lastRawMethods = [];
         let lastMatchedMethods = [];
+        let lastProfile = null;
 
         const hexLibrary = {
             int: [
@@ -274,13 +312,108 @@
         };
 
         const config = [
-            { id: 'money', label: '💰 NHÓM TÀI NGUYÊN (INT)', keys: ['gold', 'coin', 'diamond', 'gem', 'money'], type: 'int' },
-            { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], type: 'int' },
-            { id: 'combat', label: '⚔️ CHIẾN ĐẤU / TỐC ĐỘ (FLOAT ONLY)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received', 'move'], type: 'float' },
-            { id: 'cooldown', label: '⏱️ HỒI CHIÊU / DELAY (FLOAT ONLY)', keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'], type: 'float', single: false },
-            { id: 'vip', label: '🛒 MỞ KHÓA / ĐẶC QUYỀN (BOOL)', keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'], type: 'bool' },
-            { id: 'action', label: '🚫 HÀNH ĐỘNG / XỬ LÝ (VOID)', keys: ['takedamage', 'spend', 'use', 'consume', 'cost'], type: 'void' },
-            { id: 'safety', label: '🛡️ KIỂM TRA / XÁC MINH (BOOL)', keys: ['banned', 'detect', 'check', 'verify', 'security'], type: 'bool', single: false }
+            {
+                id: 'currency',
+                label: '💰 CURRENCY / TÀI NGUYÊN (INT)',
+                keys: ['currency','resource','gold','coin','money','cash','credit','token','point','points','score','wallet','balance','diamond','gem','ruby','emerald','crystal','crystals','star','stars','coupon','ticket','voucher','medal','medals'],
+                type: 'int',
+                genres: ['idle','rpg','gacha','card','sim']
+            },
+            {
+                id: 'stats',
+                label: '❤️ HP / MP / NĂNG LƯỢNG (INT)',
+                keys: ['hp','health','life','maxhp','maxhealth','mp','mana','energy','stamina','rage','power','shield','armor'],
+                type: 'int',
+                genres: ['rpg','moba','shooter','survival']
+            },
+            {
+                id: 'combat',
+                label: '⚔️ DAMAGE / SPEED (FLOAT ONLY)',
+                keys: ['damage','attack','atk','power','hit','speed','movespeed','runspeed','attackspeed','multiplier','rate','ratio','critical','crit','critdamage','critrate','received','takendamage'],
+                type: 'float',
+                genres: ['rpg','moba','shooter','runner','survival']
+            },
+            {
+                id: 'cooldown',
+                label: '⏱️ COOLDOWN / DELAY (FLOAT ONLY)',
+                keys: ['cooldown','cd','delay','interval','reuse','reusetime','cooldowntime','skillcooldown','attackcooldown','abilitycooldown','casttime','waittime','reload','reloadtime'],
+                type: 'float',
+                single: false,
+                genres: ['rpg','moba','shooter']
+            },
+            {
+                id: 'vip',
+                label: '🛒 VIP / UNLOCK (BOOL)',
+                keys: ['vip','premium','pro','unlocked','unlock','ispurchased','purchased','owned','hasitem','isowned','isvip','ispro'],
+                type: 'bool',
+                genres: ['idle','gacha','card','sim']
+            },
+            {
+                id: 'action',
+                label: '🚫 ACTION (VOID)',
+                keys: ['takedamage','damage','hurt','spend','use','consume','cost','pay','deduct','add','remove','give','reward'],
+                type: 'void',
+                genres: ['rpg','shooter','survival','idle']
+            },
+            {
+                id: 'safety',
+                label: '🛡️ CHECK / VERIFY (BOOL)',
+                keys: ['banned','ban','isbanned','detect','detected','check','verify','validation','security','anticheat','cheat','isvalid','valid'],
+                type: 'bool',
+                single: false,
+                genres: ['rpg','moba','shooter','idle','gacha','card','sim','survival']
+            }
+        ];
+
+        const genreProfiles = [
+            {
+                id: 'shooter',
+                label: 'Shooter / bắn súng',
+                keys: ['ammo','bullet','reload','reloadtime','weapon','gun','fire','shoot','crosshair','recoil','magazine'],
+                preferredGroups: ['combat','cooldown','stats','action']
+            },
+            {
+                id: 'rpg',
+                label: 'RPG / nhập vai',
+                keys: ['skill','spell','mana','hp','health','damage','quest','level','exp','boss','inventory'],
+                preferredGroups: ['stats','combat','cooldown','currency','action']
+            },
+            {
+                id: 'moba',
+                label: 'MOBA / skill combat',
+                keys: ['hero','skill','cooldown','mana','ability','tower','creep','lane'],
+                preferredGroups: ['cooldown','combat','stats']
+            },
+            {
+                id: 'idle',
+                label: 'Idle / clicker / afk',
+                keys: ['idle','offline','reward','income','profit','earn','coin','cash','vip'],
+                preferredGroups: ['currency','vip','action']
+            },
+            {
+                id: 'gacha',
+                label: 'Gacha / summon',
+                keys: ['summon','gacha','draw','pull','banner','ticket','shard','star','rarity'],
+                preferredGroups: ['currency','vip']
+            },
+            {
+                id: 'card',
+                label: 'Card / strategy',
+                keys: ['card','deck','energy','mana','cost','turn','draw','rarity'],
+                preferredGroups: ['currency','stats','vip']
+            },
+            {
+                id: 'survival',
+                label: 'Survival / sandbox',
+                keys: ['hunger','thirst','stamina','health','craft','survive','armor','damage'],
+                preferredGroups: ['stats','combat','action','currency']
+            },
+            {
+                id: 'runner',
+                label: 'Runner / endless',
+                keys: ['run','runner','speed','jump','distance','coin','score'],
+                preferredGroups: ['combat','currency']
+            }
         ];
 
         function showToast(msg) {
@@ -320,87 +453,88 @@
             return String(type || 'không rõ');
         }
 
-        function getDetailedAnalysis(name, type) {
+        function normalizeName(name) {
+            return String(name || '')
+                .toLowerCase()
+                .replace(/^(get_|set_|is_|has_|get|set|is|has)/, '')
+                .replace(/_/g, '')
+                .replace(/(value|data|info|state)$/g, '');
+        }
+
+        function inferGameProfile(raw) {
+            const haystack = raw.map(x => (x.name + ' ' + x.type + ' ' + x.args)).join(' ').toLowerCase();
+            const scores = genreProfiles.map(profile => {
+                let score = 0;
+                for (const key of profile.keys) {
+                    const count = haystack.split(key).length - 1;
+                    score += count * 4;
+                }
+                return { ...profile, score };
+            }).sort((a, b) => b.score - a.score);
+
+            const top = scores[0];
+            const confidence = top ? Math.min(95, 25 + top.score * 2) : 0;
+            return {
+                primary: top && top.score > 0 ? top.id : 'generic',
+                primaryLabel: top && top.score > 0 ? top.label : 'Game chung / chưa rõ thể loại',
+                confidence,
+                topScores: scores.filter(x => x.score > 0).slice(0, 3),
+                preferredGroups: top && top.score > 0 ? top.preferredGroups : ['currency','stats','combat','cooldown','vip','action','safety']
+            };
+        }
+
+        function getDetailedAnalysis(name, type, item, profile) {
             const n = String(name || '').toLowerCase();
             const tLabel = typeLabel(type);
-
             const rules = [
                 {
-                    keys: ['gold', 'coin', 'money'],
-                    label: 'Tài nguyên thường',
-                    what: 'Thường là số vàng, coin hoặc tiền cơ bản trong game.',
-                    use: 'Dùng để hiển thị hoặc đọc số tài nguyên hiện có.',
-                    note: 'Ưu tiên các tên ngắn như get_Gold hoặc get_Coin vì dễ hiểu hơn.'
+                    keys: ['currency','resource','gold','coin','money','cash','credit','token','point','points','score','wallet','balance','diamond','gem','ruby','emerald','crystal','crystals','star','stars','coupon','ticket','voucher','medal','medals'],
+                    label: 'Tiền tệ / tài nguyên',
+                    what: 'Thường là vàng, coin, gem, kim cương hoặc tài nguyên dùng để mua, đổi hoặc nâng cấp.',
+                    use: 'Hay dùng để hiển thị số dư, số lượng tài nguyên hoặc điểm tích lũy.',
+                    note: 'Nếu game thiên về idle/gacha thì nhóm này thường rất quan trọng.'
                 },
                 {
-                    keys: ['diamond', 'gem'],
-                    label: 'Tài nguyên hiếm',
-                    what: 'Thường là kim cương, gem hoặc tiền tệ cao cấp.',
-                    use: 'Hay liên quan tới shop, vật phẩm hiếm hoặc tính năng premium.',
-                    note: 'Nếu có nhiều kết quả, nên ưu tiên tên rõ nghĩa trước.'
+                    keys: ['hp','health','life','maxhp','maxhealth','mp','mana','energy','stamina','rage','shield','armor'],
+                    label: 'HP / MP / năng lượng',
+                    what: 'Thường là máu, mana, thể lực, giáp hoặc chỉ số sinh tồn.',
+                    use: 'Hay xuất hiện ở thanh máu, thanh mana hoặc trạng thái chiến đấu.',
+                    note: 'Life có lúc là số mạng; Energy/Stamina có thể là thể lực.'
                 },
                 {
-                    keys: ['hp', 'health', 'life'],
-                    label: 'Máu / sinh tồn',
-                    what: 'Thường là máu, lượng sống hoặc trạng thái sinh tồn.',
-                    use: 'Hay xuất hiện ở phần thông tin nhân vật, sống/chết hoặc hiển thị máu.',
-                    note: 'Life đôi khi là số mạng, không phải lúc nào cũng là HP.'
+                    keys: ['damage','attack','atk','power','hit','speed','movespeed','runspeed','attackspeed','multiplier','rate','ratio','critical','crit','critdamage','critrate','received','takendamage'],
+                    label: 'Damage / speed',
+                    what: 'Thường là sát thương, tốc độ đánh, tốc độ chạy hoặc hệ số chiến đấu.',
+                    use: 'Hay dùng trong phần tính damage, crit, tốc độ hoặc hệ số buff/debuff.',
+                    note: 'Nếu dump nghiêng về shooter / rpg thì nhóm này thường nằm top ưu tiên.'
                 },
                 {
-                    keys: ['mp', 'mana', 'energy'],
-                    label: 'Mana / năng lượng',
-                    what: 'Thường là mana, stamina hoặc năng lượng để dùng kỹ năng.',
-                    use: 'Hay liên quan tới dùng skill, phép hoặc hành động tiêu hao năng lượng.',
-                    note: 'Energy có thể là thể lực hoặc thanh hành động, không hẳn là mana.'
-                },
-                {
-                    keys: ['damage', 'attack', 'atk'],
-                    label: 'Sát thương / tấn công',
-                    what: 'Thường là chỉ số đánh hoặc lượng sát thương.',
-                    use: 'Hay dùng trong phần tính damage, hệ số đánh hoặc thông số chiến đấu.',
-                    note: 'Attack và Damage thường là hai từ khóa dễ nhận ra nhất.'
-                },
-                {
-                    keys: ['speed', 'move', 'runspeed'],
-                    label: 'Tốc độ',
-                    what: 'Thường là tốc độ di chuyển hoặc tốc độ xử lý hành động.',
-                    use: 'Có thể liên quan tới chạy, animation hoặc tốc độ tổng quát.',
-                    note: 'Không phải Speed nào cũng là tốc độ chạy.'
-                },
-                {
-                    keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'],
+                    keys: ['cooldown','cd','delay','interval','reuse','reusetime','cooldowntime','skillcooldown','attackcooldown','abilitycooldown','casttime','waittime','reload','reloadtime'],
                     label: 'Hồi chiêu / delay',
-                    what: 'Thường là thời gian chờ giữa các đòn đánh, kỹ năng hoặc hành động.',
-                    use: 'Hay liên quan tới hồi chiêu skill, thời gian đợi bắn tiếp, cast time hoặc khoảng chờ giữa 2 lần dùng.',
-                    note: 'Từ cd khá ngắn nên đôi khi bắt nhầm; các tên dài như cooldown, reusetime, casttime thường chuẩn hơn.'
+                    what: 'Thường là thời gian chờ giữa các kỹ năng hoặc hành động.',
+                    use: 'Hay liên quan tới hồi chiêu skill, cast time, reload time hoặc khoảng chờ giữa 2 lần dùng.',
+                    note: 'Nếu dump nghiêng về shooter / moba / rpg thì nhóm này rất đáng xem.'
                 },
                 {
-                    keys: ['received', 'taken', 'takedamage', 'hurt'],
-                    label: 'Sát thương nhận vào',
-                    what: 'Thường là phần liên quan tới bị đánh hoặc nhận damage.',
-                    use: 'Hay nằm trong logic trừ máu, phòng thủ hoặc damage đầu vào.',
-                    note: 'Nếu kiểu trả về là void thì thường là hàm xử lý hành động.'
+                    keys: ['vip','premium','pro','unlocked','unlock','ispurchased','purchased','owned','hasitem','isowned','isvip','ispro'],
+                    label: 'VIP / unlock',
+                    what: 'Thường là kiểm tra đã mở khóa, đã mua hoặc đã sở hữu.',
+                    use: 'Dùng để xác định trạng thái đúng/sai của quyền hoặc món đồ.',
+                    note: 'Các tên bắt đầu bằng is... hoặc has... thường đáng ưu tiên hơn.'
                 },
                 {
-                    keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'],
-                    label: 'Mở khóa / đặc quyền',
-                    what: 'Thường là kiểm tra đã mở khóa, đã mua hoặc có premium chưa.',
-                    use: 'Thường dùng để xác định trạng thái bật / tắt của quyền nào đó.',
-                    note: 'Các tên bắt đầu bằng is... thường dễ đọc nhất.'
-                },
-                {
-                    keys: ['banned', 'detect', 'check', 'verify', 'security'],
-                    label: 'Kiểm tra / xác minh',
+                    keys: ['banned','ban','isbanned','detect','detected','check','verify','validation','security','anticheat','cheat','isvalid','valid'],
+                    label: 'Check / verify',
                     what: 'Thường là hàm kiểm tra điều kiện hoặc xác minh trạng thái.',
-                    use: 'Không phải lúc nào cũng là bảo mật; nhiều khi chỉ là check logic bình thường.',
-                    note: 'Từ check / detect khá chung nên nên nhìn cả tên đầy đủ.'
+                    use: 'Có thể là check logic bình thường hoặc xác thực nội bộ.',
+                    note: 'Nhóm này dễ trúng rộng nên chỉ nên xem tên rõ nghĩa.'
                 },
                 {
-                    keys: ['spend', 'use', 'consume', 'cost'],
-                    label: 'Tiêu hao / sử dụng',
-                    what: 'Thường là dùng vật phẩm, trừ tài nguyên hoặc thực hiện hành động.',
-                    use: 'Nhóm này thiên về xử lý logic hơn là chỉ đọc dữ liệu.',
-                    note: 'Nếu return là void thì rất có thể đây là hàm thực thi.'
+                    keys: ['takedamage','damage','hurt','spend','use','consume','cost','pay','deduct','add','remove','give','reward'],
+                    label: 'Action',
+                    what: 'Thường là hàm xử lý hành động như dùng vật phẩm, trừ tài nguyên hoặc cộng thưởng.',
+                    use: 'Thiên về xử lý logic thực thi hơn là chỉ đọc dữ liệu.',
+                    note: 'Nếu return là void thì đây thường là hàm hành động.'
                 }
             ];
 
@@ -412,13 +546,14 @@
                 }
             }
 
+            const profileText = profile && profile.primaryLabel ? profile.primaryLabel : 'chưa rõ';
             if (!matched) {
                 return `
                     <div class="analysis-head">🎯 Phân tích nhanh</div>
                     <div class="analysis-mini">
                         <div><b>Là gì:</b> Chưa đủ từ khóa để xếp nhóm rõ ràng.</div>
                         <div><b>Dùng làm gì:</b> Có thể là hàm lấy dữ liệu hoặc kiểm tra trạng thái.</div>
-                        <div><b>Lưu ý:</b> Kiểu trả về hiện tại là <b>${escapeHtml(tLabel)}</b>, nên bạn có thể dựa thêm vào type để đoán chức năng.</div>
+                        <div><b>Lưu ý:</b> Kiểu trả về là <b>${escapeHtml(tLabel)}</b>. Rank hiện tại <b>#${item.rankIndex}</b>, score <b>${item.rankScore}</b>. Thể loại đoán được: <b>${escapeHtml(profileText)}</b>.</div>
                     </div>
                 `;
             }
@@ -428,7 +563,95 @@
                 <div class="analysis-mini">
                     <div><b>Là gì:</b> ${matched.what}</div>
                     <div><b>Dùng làm gì:</b> ${matched.use}</div>
-                    <div><b>Lưu ý:</b> ${matched.note} Kiểu trả về hiện tại là <b>${escapeHtml(tLabel)}</b>.</div>
+                    <div><b>Lưu ý:</b> ${matched.note} Kiểu trả về là <b>${escapeHtml(tLabel)}</b>. Rank <b>#${item.rankIndex}</b>, score <b>${item.rankScore}</b>.</div>
+                </div>
+            `;
+        }
+
+        function scoreMethod(method, group, profile) {
+            const name = (method.name || '').toLowerCase();
+            let score = 0;
+
+            for (const key of group.keys) {
+                if (name === 'get_' + key) score += 140;
+                else if (name === 'is_' + key || name === 'is' + key) score += 130;
+                else if (name === 'has_' + key || name === 'has' + key) score += 120;
+                else if (name.startsWith('get_') && name.includes(key)) score += 115;
+                else if (name.startsWith('is') && name.includes(key)) score += 108;
+                else if (name.startsWith('has') && name.includes(key)) score += 102;
+                else if (name.includes('_' + key)) score += 78;
+                else if (name.endsWith(key)) score += 72;
+                else if (name.includes(key)) score += 58;
+            }
+
+            if (method.args === '') score += 18;
+            if (method.access === 'public') score += 10;
+            if (!method.isStatic) score += 4;
+
+            if (profile && profile.preferredGroups && profile.preferredGroups.includes(group.id)) score += 16;
+
+            if (name.length > 32) score -= 8;
+            if (name.includes('tmp') || name.includes('test') || name.includes('debug')) score -= 14;
+            if (name.startsWith('set_') || name.startsWith('set')) score -= 40;
+
+            return score;
+        }
+
+        function dedupeRanked(ranked) {
+            const seen = new Set();
+            const out = [];
+            for (const item of ranked) {
+                const norm = normalizeName(item.name);
+                const key = norm + '|' + item.type;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                out.push(item);
+            }
+            return out;
+        }
+
+        function rankCandidates(candidates, group, profile) {
+            const ranked = candidates.map(item => {
+                const rankScore = scoreMethod(item, group, profile);
+                return { ...item, rankScore };
+            }).sort((a, b) => {
+                if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
+                return a.name.localeCompare(b.name);
+            });
+
+            const deduped = dedupeRanked(ranked);
+            return deduped.map((item, index) => ({
+                ...item,
+                rankIndex: index + 1,
+                isBest: index === 0
+            }));
+        }
+
+        function renderProfile(profile) {
+            if (!profile) {
+                profileArea.innerHTML = '';
+                return;
+            }
+
+            const topScores = profile.topScores.map(x =>
+                `<span class="pill">${escapeHtml(x.label)} · ${x.score}</span>`
+            ).join(' ');
+
+            const preferred = config
+                .filter(g => profile.preferredGroups.includes(g.id))
+                .map(g => `<span class="pill">${escapeHtml(g.label)}</span>`)
+                .join(' ');
+
+            profileArea.innerHTML = `
+                <div class="profile-box">
+                    <div class="analysis-head">🧠 Phân tích dump</div>
+                    <div class="analysis-mini">
+                        <div><b>Dạng game đoán được:</b> ${escapeHtml(profile.primaryLabel)}</div>
+                        <div><b>Độ tin cậy:</b> ${profile.confidence}%</div>
+                        <div><b>Ưu tiên nhóm:</b> ${preferred || '<span class="pill">Không rõ</span>'}</div>
+                        <div><b>Tín hiệu tìm thấy:</b> ${topScores || '<span class="pill">Không đủ dữ liệu</span>'}</div>
+                        <div><b>Cách lọc:</b> Tool đang ưu tiên <b>get_</b>, tự <b>rank</b>, tự <b>bỏ hàm trùng</b>, và highlight <b>best match</b> màu đỏ để dễ tìm hơn.</div>
+                    </div>
                 </div>
             `;
         }
@@ -449,7 +672,8 @@
                 return;
             }
             const payload = {
-                version: '49.5',
+                version: '50.1 SMART',
+                gameProfile: lastProfile,
                 totalRawMethods: lastRawMethods.length,
                 totalMatchedMethods: lastMatchedMethods.length,
                 groups: lastRenderedData
@@ -464,7 +688,11 @@
                 return;
             }
 
-            let md = '# Visual Patcher v49.5 Report\n\n';
+            let md = '# Visual Patcher v50.1 SMART Report\n\n';
+            if (lastProfile) {
+                md += `- Game Profile: ${lastProfile.primaryLabel}\n`;
+                md += `- Confidence: ${lastProfile.confidence}%\n`;
+            }
             md += `- Total raw methods: ${lastRawMethods.length}\n`;
             md += `- Total matched methods: ${lastMatchedMethods.length}\n\n`;
 
@@ -479,7 +707,9 @@
                     md += `  - Type: ${item.type}\n`;
                     md += `  - Access: ${item.access || 'public'}\n`;
                     md += `  - Static: ${item.isStatic ? 'Yes' : 'No'}\n`;
-                    md += `  - Args: ${item.args || '(none)'}\n`;
+                    md += `  - Rank Score: ${item.rankScore}\n`;
+                    md += `  - Rank: #${item.rankIndex}\n`;
+                    md += `  - Best: ${item.isBest ? 'Yes' : 'No'}\n`;
                 }
                 md += '\n';
             }
@@ -492,7 +722,9 @@
             lastRenderedData = {};
             lastRawMethods = [];
             lastMatchedMethods = [];
+            lastProfile = null;
             searchBox.value = '';
+            profileArea.innerHTML = '';
             statsBar.innerHTML = '';
             resultsArea.innerHTML = '';
             showToast('Đã clear');
@@ -566,6 +798,7 @@
                     </div>
                 `;
                 resultsArea.innerHTML = '';
+                profileArea.innerHTML = '';
                 return;
             }
 
@@ -599,6 +832,8 @@
             }
 
             lastRawMethods = raw;
+            lastProfile = inferGameProfile(raw);
+            renderProfile(lastProfile);
 
             if (!raw.length) {
                 lastRenderedData = {};
@@ -624,20 +859,9 @@
                 });
 
                 if (candidates.length > 0) {
-                    if (group.single === false) {
-                        results[group.id] = candidates;
-                    } else {
-                        const unique = [];
-                        group.keys.forEach(k => {
-                            let best =
-                                candidates.find(c => c.nameL === 'get_' + k || c.nameL === 'is' + k) ||
-                                candidates.find(c => c.nameL.includes(k));
-                            if (best && !unique.some(u => u.nameL === best.nameL && u.rva === best.rva)) {
-                                unique.push(best);
-                            }
-                        });
-                        if (unique.length) results[group.id] = unique;
-                    }
+                    const ranked = rankCandidates(candidates, group, lastProfile);
+                    const maxCount = group.single === false ? 8 : 6;
+                    results[group.id] = ranked.slice(0, maxCount);
                 }
             });
 
@@ -685,7 +909,7 @@
             statsBar.innerHTML = `
                 <div class="flex flex-wrap gap-3 justify-center">
                     <div class="stats-chip">Tổng method quét được: <span class="text-emerald-400">${totalRaw}</span></div>
-                    <div class="stats-chip">Tổng method khớp: <span class="text-emerald-400">${totalMatched}</span></div>
+                    <div class="stats-chip">Tổng method sau lọc thông minh: <span class="text-emerald-400">${totalMatched}</span></div>
                     ${query ? `<div class="stats-chip">Search: <span class="text-emerald-400">${escapeHtml(query)}</span></div>` : ''}
                 </div>
             `;
@@ -720,13 +944,13 @@
                             <h2 class="text-xl md:text-2xl font-black uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">
                                 ${group.label}
                             </h2>
-                            <div class="text-slate-500 text-sm font-bold">Số lượng: ${items.length}</div>
+                            <div class="text-slate-500 text-sm font-bold">Đã chọn thông minh: ${items.length}</div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="grid-${groupId}">
                             ${items.map(item => {
                                 const options = hexLibrary[group.type] || [];
-                                const description = getDetailedAnalysis(item.name, item.type);
+                                const description = getDetailedAnalysis(item.name, item.type, item, lastProfile);
                                 const itemKey = safeId(item.rva + '_' + item.name);
                                 const selectId = `sel_${itemKey}`;
                                 const displayId = `display_${itemKey}`;
@@ -735,17 +959,20 @@
                                 const chunks = chunkHex(defaultHex);
 
                                 return `
-                                <div class="card p-4 md:p-5 shadow-2xl">
+                                <div class="card ${item.isBest ? 'best-card' : ''} p-4 md:p-5 shadow-2xl">
+                                    ${item.isBest ? `<div class="best-ribbon">🔥 HÀM CHUẨN NHẤT</div>` : ''}
                                     <span class="type-tag ${group.type}">${escapeHtml(item.type)}</span>
 
-                                    <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all leading-tight pr-20">
+                                    <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all leading-tight ${item.isBest ? 'pt-7' : 'pr-20'}">
                                         ${escapeHtml(item.name)}()
                                     </div>
 
                                     <div class="flex gap-2 flex-wrap mb-2">
                                         <span class="pill">${escapeHtml(item.access || 'public')}</span>
                                         <span class="pill">${item.isStatic ? 'static' : 'instance'}</span>
-                                        <span class="pill">${escapeHtml(item.args ? `args` : 'no args')}</span>
+                                        <span class="pill">${escapeHtml(item.args ? 'args' : 'no args')}</span>
+                                        <span class="rank-pill">RANK #${item.rankIndex}</span>
+                                        <span class="rank-pill">SCORE ${item.rankScore}</span>
                                     </div>
 
                                     <div class="analysis-box">${description}</div>

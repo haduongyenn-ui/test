@@ -2,31 +2,29 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v28.0 - Master Sniper</title>
+    <title>Analyzer v29.0 - Int32 Specialist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 2px solid rgba(255,255,255,0.05); }
-        .card-item { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; transition: 0.3s; position: relative; }
-        .card-item:hover { border-color: #10b981; transform: translateY(-3px); }
-        .type-label { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
-        .rva-final { font-family: monospace; color: #f43f5e; font-size: 1.2rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #312e81; text-align: center; display: block; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
-        .hex-btn:active { transform: scale(0.95); }
+        .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 2.5rem; background: #0f172a; border: 1px solid rgba(255,255,255,0.05); }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.25rem; transition: 0.3s; position: relative; }
+        .type-tag { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 5px; color: white; }
+        .rva-val { font-family: monospace; color: #f43f5e; font-size: 1.1rem; font-weight: 900; background: #000; padding: 8px; border-radius: 10px; border: 1px solid #312e81; text-align: center; display: block; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; }
         .int32 { background: #059669; } .void { background: #7c3aed; } .bool { background: #d97706; } .single { background: #0891b2; }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 p-6 font-sans">
+<body class="bg-[#020617] text-slate-300 p-6 font-sans text-center">
 
-    <div class="max-w-[1600px] mx-auto text-center">
+    <div class="max-w-[1600px] mx-auto">
         <header class="mb-12">
-            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">MASTER SNIPER <span class="text-emerald-500">v28.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.4em]">Phân Tích Đủ RVA Tử Huyệt • Dứt Điểm Filza</p>
+            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">INT32 SNIPER <span class="text-emerald-500">v29.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Chỉ Quét Int32 Cho Tiền/HP • Gửi Tất Cả RVA Tử Huyệt</p>
         </header>
 
         <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-12 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest uppercase">Thả <span class="text-emerald-500 underline italic">dump.cs</span> để lấy RVA</p>
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest text-center">Thả <span class="text-emerald-500 underline uppercase italic">dump.cs</span> để lọc chuẩn</p>
         </div>
 
         <div id="resultsArea" class="space-y-12 text-left"></div>
@@ -37,12 +35,11 @@
         const resultsArea = document.getElementById('resultsArea');
 
         const rules = [
-            { id: 'currency', label: '💰 TIỀN TỆ & LEVEL (Int32)', keys: ['gold', 'coin', 'diamond', 'gem', 'money', 'level', 'exp', 'point'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'stats', label: '❤️ HP & MP (Int32)', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'logic', label: '🛡️ CHECK ĐIỀU KIỆN (Boolean)', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'hasads', 'isdead', 'canuse'], hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'combat', label: '⚔️ SÁT THƯƠNG & TỐC ĐỘ (Float)', keys: ['damage', 'attack', 'speed', 'velocity', 'multiplier'], hex: "00 00 C8 42 C0 03 5F D6" },
-            { id: 'action', label: '🚫 HÀNH ĐỘNG (Void)', keys: ['takedamage', 'ondamage', 'spend', 'use', 'remove', 'add'], hex: "C0 03 5F D6" },
-            { id: 'antiban', label: '🛡️ ANTIBAN (Gửi 100%)', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'cheatdetect', 'jailbreak'], hex: "00 00 80 D2 C0 03 5F D6" }
+            { id: 'int32_group', label: '💰 NHÓM CHỈ SỐ (Chỉ Int32 - Tiền, HP, Level)', keys: ['gold', 'coin', 'diamond', 'gem', 'money', 'level', 'hp', 'health', 'life', 'mp', 'mana', 'exp'], targetType: 'int32', hex: "00 E1 00 D2 C0 03 5F D6" },
+            { id: 'bool_group', label: '🛡️ CHECK ĐIỀU KIỆN (Boolean - VIP, Unlock)', keys: ['isvip', 'ispremium', 'ispurchased', 'isunlocked', 'hasads', 'isdead'], targetType: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
+            { id: 'float_group', label: '⚔️ HỆ SỐ (Float/Single - Dame, Speed)', keys: ['damage', 'attack', 'speed', 'velocity', 'multiplier'], targetType: 'single', hex: "00 00 C8 42 C0 03 5F D6" },
+            { id: 'void_group', label: '🚫 HÀNH ĐỘNG (Void - Add, Attack, Use)', keys: ['takedamage', 'ondamage', 'spend', 'use', 'remove', 'add', 'attack'], targetType: 'void', hex: "C0 03 5F D6" },
+            { id: 'antiban', label: '🛡️ ANTIBAN (Gửi 100% RVA Tìm Thấy)', keys: ['isbanned', 'detectcheat', 'checkintegrity', 'cheatdetect', 'jailbreak'], targetType: 'all', hex: "00 00 80 D2 C0 03 5F D6" }
         ];
 
         const blacklist = ['compare', 'tostring', 'equals', 'gethashcode', 'item', 'count', 'index', 'width', 'height', 'color'];
@@ -65,8 +62,21 @@
 
             let results = {};
             rules.forEach(rule => {
-                let allMain = raw.filter(m => rule.keys.some(k => m.nameL.includes(k)) && !blacklist.some(b => m.nameL.includes(b)));
-                if (allMain.length > 0) results[rule.id] = allMain.map(m => ({...m, label: rule.label, hex: rule.hex}));
+                let filtered = raw.filter(m => {
+                    const nameMatch = rule.keys.some(k => m.nameL.includes(k)) && !blacklist.some(b => m.nameL.includes(b));
+                    if (!nameMatch) return false;
+                    
+                    if (rule.targetType === 'all') return true;
+                    // Chỉnh sửa lọc gắt gao kiểu dữ liệu
+                    const typeL = m.type.toLowerCase();
+                    if (rule.targetType === 'int32') return typeL === 'int32' || typeL === 'int';
+                    if (rule.targetType === 'bool') return typeL === 'bool' || typeL === 'boolean';
+                    if (rule.targetType === 'single') return typeL === 'single' || typeL === 'float';
+                    if (rule.targetType === 'void') return typeL === 'void';
+                    return false;
+                });
+                
+                if (filtered.length > 0) results[rule.id] = filtered.map(m => ({...m, label: rule.label, hex: rule.hex}));
             });
             render(results);
         }
@@ -81,25 +91,25 @@
                     <div class="group-box">
                         <div class="flex justify-between items-center mb-6 pl-4 border-l-8 border-emerald-500">
                             <h2 class="text-3xl font-black uppercase italic text-emerald-500">${rule.label}</h2>
-                            <span class="text-xs font-bold text-slate-500 uppercase">Tìm thấy ${items.length} RVA tử huyệt</span>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Phát hiện ${items.length} RVA chuẩn</span>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             ${items.map(item => `
-                                <div class="card-item p-6 shadow-2xl">
-                                    <span class="type-label ${item.type.toLowerCase().includes('int') ? 'int32' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'single'))}">${item.type}</span>
+                                <div class="card p-6 shadow-2xl">
+                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int32' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'single'))}">${item.type}</span>
                                     <div class="mb-4">
                                         <div class="text-[11px] font-black text-white break-all leading-tight italic uppercase">${item.name}</div>
                                     </div>
-                                    <div class="mb-6">
-                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center italic">Address Filza:</div>
-                                        <span class="rva-final cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</span>
+                                    <div class="mb-5 text-center">
+                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 italic">Offset Address (Filza):</div>
+                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</span>
                                     </div>
                                     <div class="pt-4 border-t border-slate-800 text-center">
                                         <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Copied Hex!')" 
                                             class="hex-btn w-full py-4 rounded-xl text-[10px] uppercase tracking-widest shadow-lg">
-                                            Copy Mã Hex Dứt Điểm
+                                            Copy Mã Hex Patch
                                         </button>
-                                        <div class="text-[9px] text-slate-500 font-mono mt-3 italic">${item.hex}</div>
+                                        <div class="text-center text-[9px] text-slate-500 font-mono mt-3 italic">${item.hex}</div>
                                     </div>
                                 </div>
                             `).join('')}

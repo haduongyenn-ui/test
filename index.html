@@ -2,20 +2,17 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyzer v40.0 - The God Analyst</title>
+    <title>Analyzer v41.0 - Universal Translator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         .group-box { border-radius: 2rem; padding: 2rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
         .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; }
-        .card:hover { border-color: #10b981; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
         .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
         .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
-        .desc-box { background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 10px; margin: 15px 0; border-radius: 4px; font-size: 12px; color: #34d399; line-height: 1.5; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .hex-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .desc-box { background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; line-height: 1.6; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; }
         .int { background: #059669; } .bool { background: #d97706; } .void { background: #7c3aed; } .float { background: #0891b2; }
     </style>
 </head>
@@ -23,12 +20,12 @@
 
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter italic">GOD ANALYST <span class="text-emerald-500">v40.0</span></h1>
-            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.6em]">Phân Tích Tử Huyệt • Chỉ Lọc Hàm Chuẩn () { }</p>
+            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter">UNIVERSAL <span class="text-emerald-500">TRANSLATOR</span> v41.0</h1>
+            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.5em]">Tự Động Phân Tích & Dịch Thuật Mọi Hàm Tử Huyệt</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-20 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all group">
-            <p class="text-3xl text-slate-500 font-black uppercase italic tracking-widest group-hover:text-emerald-500">THẢ FILE <span class="underline">DUMP.CS</span> VÀO ĐÂY</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-20 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all">
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> VÀO ĐỂ DỊCH HÀM</p>
         </div>
 
         <div id="resultsArea" class="space-y-16 text-left"></div>
@@ -38,36 +35,50 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // TỪ ĐIỂN PHÂN TÍCH CHI TIẾT CÔNG DỤNG
-        const expertDictionary = {
-            'get_gold': 'HACK VÀNG: Ép chỉ số vàng lên 999.999. Giúp bạn mua sắm trang bị không giới hạn.',
-            'get_gem': 'HACK KIM CƯƠNG: Ép đá quý lên tối đa. Dùng để quay tướng, mở hòm hoặc mua vật phẩm Premium.',
-            'get_diamond': 'HACK KIM CƯƠNG: Ép đá quý lên tối đa. Dùng để quay tướng, mở hòm hoặc mua vật phẩm Premium.',
-            'get_maxhp': 'HACK MÁU (HP): Tăng giới hạn máu tối đa. Khi kết hợp với bất tử, thanh máu sẽ không bao giờ cạn.',
-            'get_maxhealth': 'HACK MÁU (HP): Tăng giới hạn máu tối đa. Khi kết hợp với bất tử, thanh máu sẽ không bao giờ cạn.',
-            'get_maxmp': 'HACK MANA: Tăng năng lượng tối đa để tung kỹ năng liên tục mà không lo hết Mana.',
-            'get_damagemultiplier': 'ONE HIT (Hệ số sát thương): Nhân dame của bạn lên 100 lần. Đánh phát chết luôn (One Hit Kill).',
-            'get_damagereceivedmultiplier': 'BẤT TỬ (Hệ số nhận dame): Giảm sát thương kẻ địch đánh vào về 0. Bạn sẽ trở nên BẤT TỬ.',
-            'get_speed': 'TỐC ĐỘ: Tăng tốc độ di chuyển của nhân vật. Giúp di chuyển cực nhanh trên bản đồ.',
-            'get_speedmultiplier': 'HỆ SỐ TỐC ĐỘ: Nhân tốc độ di chuyển lên nhiều lần. Khuyên dùng X2 hoặc X5 để tránh văng game.',
-            'get_movespeed': 'TỐC ĐỘ: Giúp nhân vật di chuyển linh hoạt và nhanh chóng hơn.',
-            'get_damagepersecond': 'DAME THEO GIÂY: Tăng lượng máu quái bị trừ mỗi giây. Rút máu Boss cực nhanh.',
-            'isvip': 'KÍCH HOẠT VIP: Mở khóa đặc quyền hội viên, skin hiếm và các vật phẩm giới hạn miễn phí.',
-            'ispremium': 'BẢN QUYỀN PREMIUM: Mở khóa toàn bộ tính năng trả phí trong game.',
-            'isunlocked': 'MỞ KHÓA TẤT CẢ: Mở khóa toàn bộ nhân vật, màn chơi và vật phẩm đang bị khóa.',
-            'ispurchased': 'HACK MUA HÀNG: Game sẽ hiểu là bạn đã mua gói nạp này rồi (Bypass IAP).',
-            'takedamage': 'CHẶN TRỪ MÁU: Ngăn game thực hiện bước trừ máu khi bạn bị trúng đòn (Bất tử Void).',
-            'isbanned': 'ANTIBAN: Trả về kết quả "Sạch". Giúp lách qua trình kiểm tra tài khoản của server.',
-            'detectcheat': 'TẮT QUÉT HACK: Làm mù trình bảo mật của game, giúp dùng Mod an toàn hơn.'
-        };
+        // HÀM DỊCH THUẬT VÀ PHÂN TÍCH TỰ ĐỘNG
+        function translateFunction(name, type) {
+            const n = name.toLowerCase();
+            const t = type.toLowerCase();
+            
+            // 1. Phân tích theo từ khóa cụ thể (Từ điển ưu tiên)
+            const dictionary = {
+                'gold': 'TIỀN VÀNG', 'gem': 'KIM CƯƠNG', 'diamond': 'KIM CƯƠNG', 'coin': 'TIỀN XU',
+                'hp': 'MÁU', 'health': 'MÁU', 'mp': 'NĂNG LƯỢNG', 'mana': 'PHÁP LỰC',
+                'damage': 'SÁT THƯƠNG', 'attack': 'TẤN CÔNG', 'speed': 'TỐC ĐỘ',
+                'multiplier': 'HỆ SỐ NHÂN', 'received': 'NHẬN VÀO', 'persecond': 'MỖI GIÂY',
+                'isvip': 'TRẠNG THÁI VIP', 'ispurchased': 'TRẠNG THÁI MUA', 'unlocked': 'MỞ KHÓA'
+            };
+
+            let mainSubject = "";
+            for (let key in dictionary) {
+                if (n.includes(key)) { mainSubject = dictionary[key]; break; }
+            }
+
+            // 2. Logic giải thích theo kiểu dữ liệu và cấu trúc hàm
+            let actionText = "";
+            if (t.includes('int')) {
+                actionText = `Khi Patch: Ép chỉ số ${mainSubject || 'này'} lên mức tối đa (999.999).`;
+            } else if (t.includes('bool')) {
+                if (n.includes('ban') || n.includes('cheat')) {
+                    actionText = `Khi Patch (False): Vô hiệu hóa tính năng ${mainSubject || 'kiểm tra'} này để tránh bị phát hiện.`;
+                } else {
+                    actionText = `Khi Patch (True): Kích hoạt vĩnh viễn tính năng ${mainSubject || 'này'}.`;
+                }
+            } else if (t.includes('void')) {
+                actionText = `Khi Patch (RET): Chặn đứng hành động ${mainSubject || 'này'} (Ví dụ: Chặn bị quái đánh trúng).`;
+            } else if (t.includes('float') || t.includes('single')) {
+                if (n.includes('received')) {
+                    actionText = `Khi Patch (0.0): Giảm hệ số ${mainSubject || 'này'} về 0 để được Bất Tử.`;
+                } else {
+                    actionText = `Khi Patch (100.0): Nhân hệ số ${mainSubject || 'này'} lên cực đại (Gấp 100 lần).`;
+                }
+            }
+
+            return `⚡ <b>Công dụng:</b> Điều chỉnh <b>${mainSubject || name}</b>.<br>🎯 <b>Hậu quả:</b> ${actionText}`;
+        }
 
         const catalog = [
-            { id: 'money', label: '💰 TÀI NGUYÊN (INT32)', keys: ['gold', 'coin', 'gem', 'diamond', 'money'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'stats', label: '❤️ CHỈ SỐ (INT32)', keys: ['hp', 'health', 'mp', 'mana'], type: 'int', hex: "00 E1 00 D2 C0 03 5F D6" },
-            { id: 'logic', label: '🛡️ VIP & MỞ KHÓA (BOOL)', keys: ['vip', 'premium', 'purchased', 'unlocked'], type: 'bool', hex: "20 00 80 D2 C0 03 5F D6" },
-            { id: 'combat', label: '⚔️ SỨC MẠNH & TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier', 'persecond'], type: 'float', hex: "00 00 C8 42 C0 03 5F D6" },
-            { id: 'voids', label: '🚫 HÀNH ĐỘNG (VOID PATCH)', keys: ['takedamage', 'spend', 'use', 'onhit'], type: 'void', hex: "C0 03 5F D6" },
-            { id: 'security', label: '🛡️ ANTIBAN & BẢO MẬT (BOOL)', keys: ['banned', 'detect', 'check', 'integrity'], type: 'bool', hex: "00 00 80 D2 C0 03 5F D6" }
+            { id: 'all', label: '🚀 DANH SÁCH HÀM TỬ HUYỆT (ĐÃ PHÂN TÍCH)', keys: ['gold', 'coin', 'gem', 'diamond', 'money', 'hp', 'health', 'mp', 'mana', 'vip', 'premium', 'purchased', 'unlocked', 'damage', 'attack', 'speed', 'multiplier', 'persecond', 'takedamage', 'isbanned', 'detectcheat'], type: 'all' }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -80,58 +91,46 @@
         }
 
         function processDump(content) {
-            // Regex siêu chuẩn cho: public (static) type Name() { }
             const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(\)\s*\{\s*\}/gi;
-            let rawMatches = []; let match;
+            let found = []; let match;
             while ((match = regex.exec(content)) !== null) {
-                rawMatches.push({ rva: match[1], type: match[2], name: match[3], nameL: match[3].toLowerCase() });
+                const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
+                const isImportant = catalog[0].keys.some(k => nameL.includes(k));
+                const isValidType = ['int32', 'int', 'bool', 'boolean', 'void', 'float', 'single'].some(t => type.toLowerCase() === t);
+                
+                if (isImportant && isValidType) {
+                    found.push({ rva, type, name, analysis: translateFunction(name, type) });
+                }
             }
-
-            let results = {};
-            catalog.forEach(rule => {
-                let filtered = rawMatches.filter(m => {
-                    const tL = m.type.toLowerCase();
-                    let typeOk = false;
-                    if (rule.type === 'int') typeOk = (tL === 'int32' || tL === 'int');
-                    if (rule.type === 'bool') typeOk = (tL === 'bool' || tL === 'boolean');
-                    if (rule.type === 'void') typeOk = (tL === 'void');
-                    if (rule.type === 'float') typeOk = (tL === 'single' || tL === 'float');
-                    const nameOk = rule.keys.some(k => m.nameL.includes(k));
-                    return typeOk && nameOk;
-                });
-                if (filtered.length > 0) results[rule.id] = filtered;
-            });
-            render(results);
+            render(found);
         }
 
         function render(data) {
             resultsArea.innerHTML = '';
-            catalog.forEach(rule => {
-                const items = data[rule.id];
-                if (!items) return;
-                resultsArea.insertAdjacentHTML('beforeend', `
-                    <div class="group-box">
-                        <h2 class="text-3xl font-black mb-8 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">${rule.label}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            ${items.map(item => {
-                                const analysis = expertDictionary[item.nameL] || 'Hàm quan trọng: Cần can thiệp RVA này để thay đổi chỉ số tương ứng trong game.';
-                                return `
-                                <div class="card p-6 shadow-2xl">
-                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
-                                    <div class="mb-4 text-[11px] font-black text-white italic uppercase break-all">${item.name}()</div>
-                                    <div class="desc-box">💡 ${analysis}</div>
-                                    <div class="mb-6">
-                                        <div class="text-[10px] text-slate-600 font-bold uppercase mb-2 text-center">Địa chỉ RVA (Dùng trong Filza):</div>
-                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
-                                    </div>
-                                    <button onclick="navigator.clipboard.writeText('${rule.hex}'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95">Copy Mã Hex Dứt Điểm</button>
-                                    <div class="text-center text-[9px] text-slate-500 font-mono mt-3 italic">Mã gợi ý: ${rule.hex}</div>
-                                </div>`;
-                            }).join('')}
-                        </div>
+            if (data.length === 0) {
+                resultsArea.innerHTML = '<p class="text-center text-rose-500 font-black">KHÔNG TÌM THẤY HÀM NÀO KHỚP VỚI CẤU TRÚC TỬ HUYỆT!</p>';
+                return;
+            }
+
+            resultsArea.insertAdjacentHTML('beforeend', `
+                <div class="group-box">
+                    <h2 class="text-3xl font-black mb-10 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">PHÂN TÍCH TẤT CẢ CÁC HÀM TÌM THẤY</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${data.map(item => `
+                            <div class="card p-6 shadow-2xl">
+                                <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
+                                <div class="mb-4 text-[13px] font-black text-white italic uppercase break-all leading-tight">${item.name}()</div>
+                                <div class="desc-box">${item.analysis}</div>
+                                <div class="my-6">
+                                    <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center italic">Địa chỉ Address Filza:</div>
+                                    <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
+                                </div>
+                                <button onclick="navigator.clipboard.writeText('00 E1 00 D2 C0 03 5F D6'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95 text-[10px] uppercase tracking-widest">Copy Hex Patch</button>
+                            </div>
+                        `).join('')}
                     </div>
-                `);
-            });
+                </div>
+            `);
         }
     </script>
 </body>

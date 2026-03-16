@@ -278,7 +278,6 @@
             { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], type: 'int' },
             { id: 'combat', label: '⚔️ CHIẾN ĐẤU / TỐC ĐỘ (FLOAT ONLY)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received', 'move'], type: 'float' },
             { id: 'cooldown', label: '⏱️ HỒI CHIÊU / DELAY (FLOAT ONLY)', keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'], type: 'float', single: false },
-            { id: 'ads', label: '📺 NHÓM ADS / QUẢNG CÁO (BOOL)', keys: ['ads', 'ad', 'advertise', 'advertisement', 'rewarded', 'interstitial', 'banner', 'videoad'], type: 'bool', single: false },
             { id: 'vip', label: '🛒 MỞ KHÓA / ĐẶC QUYỀN (BOOL)', keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'], type: 'bool' },
             { id: 'action', label: '🚫 HÀNH ĐỘNG / XỬ LÝ (VOID)', keys: ['takedamage', 'spend', 'use', 'consume', 'cost'], type: 'void' },
             { id: 'safety', label: '🛡️ KIỂM TRA / XÁC MINH (BOOL)', keys: ['banned', 'detect', 'check', 'verify', 'security'], type: 'bool', single: false }
@@ -374,13 +373,6 @@
                     what: 'Thường là thời gian chờ giữa các đòn đánh, kỹ năng hoặc hành động.',
                     use: 'Hay liên quan tới hồi chiêu skill, thời gian đợi bắn tiếp, cast time hoặc khoảng chờ giữa 2 lần dùng.',
                     note: 'Từ cd khá ngắn nên đôi khi bắt nhầm; các tên dài như cooldown, reusetime, casttime thường chuẩn hơn.'
-                },
-                {
-                    keys: ['ads', 'ad', 'advertise', 'advertisement', 'rewarded', 'interstitial', 'banner', 'videoad'],
-                    label: 'Ads / quảng cáo',
-                    what: 'Thường là các hàm kiểm tra hoặc trạng thái liên quan tới quảng cáo trong game/app.',
-                    use: 'Có thể dùng để biết quảng cáo có sẵn, đã tải xong, có thể hiện hay có thưởng hay chưa.',
-                    note: 'Từ ad khá ngắn nên đôi khi có thể dính nhầm; các tên như rewarded, interstitial, banner thường rõ hơn.'
                 },
                 {
                     keys: ['received', 'taken', 'takedamage', 'hurt'],

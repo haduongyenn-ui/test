@@ -2,42 +2,44 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v31.0 - One Sniper</title>
+    <title>Analyzer v32.0 - Int32 Sniper Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .target-card { background: #020617; border: 2px solid #10b981; border-radius: 2rem; padding: 2.5rem; transition: 0.3s; position: relative; max-width: 500px; margin: 0 auto; }
-        .rva-display { font-family: monospace; color: #f43f5e; font-size: 1.8rem; font-weight: 900; background: #000; padding: 15px; border-radius: 15px; border: 1px solid #10b981; text-align: center; display: block; margin: 20px 0; }
-        .btn-copy { background: #10b981; color: #000; font-weight: 900; width: 100%; py: 1rem; border-radius: 1rem; transition: 0.2s; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
-        .btn-copy:active { transform: scale(0.95); }
+        .target-card { background: #020617; border: 2px solid #10b981; border-radius: 2rem; padding: 2rem; transition: 0.3s; position: relative; }
+        .target-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.5rem; font-weight: 900; background: #000; padding: 12px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
+        .hex-patch { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .type-badge { position: absolute; top: 15px; right: 20px; background: #059669; color: white; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-8 font-sans">
 
-    <div class="max-w-[1200px] mx-auto text-center">
+    <div class="max-w-[1400px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-5xl font-black text-white italic uppercase italic">THE <span class="text-emerald-500">ONE</span> SNIPER</h1>
-            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Chỉ Lấy RVA Chuẩn Nhất • Bỏ Qua Hàm Rác</p>
+            <h1 class="text-6xl font-black text-white italic uppercase italic tracking-tighter">INT32 <span class="text-emerald-500">SNIPER</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-3 uppercase tracking-[0.5em]">Chỉ Quét Public Int32 • Bỏ Qua Hàm Phụ</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-12 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-12 transition-all">
-            <p class="text-xl text-slate-400 font-bold uppercase italic">Thả file <span class="text-emerald-500 underline uppercase">dump.cs</span> vào đây</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[3rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-12 transition-all">
+            <p class="text-2xl text-slate-400 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> VÀO ĐÂY</p>
         </div>
 
-        <div id="resultsArea" class="space-y-10"></div>
+        <div id="resultsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 text-left"></div>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // BỘ LỌC CỰC GẮT: CHỈ LẤY GET_GOLD VÀ CÁC HÀM TƯƠNG TỰ LÀ INT32
-        const coreTargets = [
-            { label: 'HÀM VÀNG (GOLD)', keys: ['get_gold', 'get_coin', 'get_money'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { label: 'HÀM KIM CƯƠNG (GEM)', keys: ['get_gem', 'get_diamond'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { label: 'HÀM MÁU (HP)', keys: ['get_hp', 'get_maxhp', 'get_health'], hex: "00 E1 00 D2 C0 03 5F D6" },
-            { label: 'HÀM ANTIBAN (FULL)', keys: ['isbanned', 'detectcheat'], hex: "00 00 80 D2 C0 03 5F D6" }
+        // CHỈ LẤY CÁC HÀM GET QUAN TRỌNG VÀ PHẢI LÀ INT32
+        const coreRules = [
+            { id: 'gold', label: 'VÀNG (GOLD)', keys: ['get_gold', 'get_coin', 'get_money'] },
+            { id: 'gem', label: 'KIM CƯƠNG (GEM)', keys: ['get_gem', 'get_diamond', 'get_ruby'] },
+            { id: 'hp', label: 'MÁU (HP)', keys: ['get_hp', 'get_maxhp', 'get_health', 'get_maxhealth'] },
+            { id: 'mp', label: 'NĂNG LƯỢNG (MP)', keys: ['get_mp', 'get_maxmp', 'get_mana'] },
+            { id: 'level', label: 'CẤP ĐỘ (LEVEL)', keys: ['get_level', 'get_lvl'] }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -50,16 +52,15 @@
         }
 
         function processDump(content) {
-            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?([\w<>[\]]+)\s+(\w+)\s*\(/gi;
+            const regex = /\/\/ RVA:\s+(0x[0-9A-F]+)\s*\n\s*public\s+(?:static\s+)?(Int32|int)\s+(\w+)\s*\(/gi;
             let found = []; let match;
+            
             while ((match = regex.exec(content)) !== null) {
                 const rva = match[1], type = match[2], name = match[3], nameL = name.toLowerCase();
                 
-                coreTargets.forEach(target => {
-                    if (target.keys.some(k => nameL === k)) {
-                        // Kiểm tra kiểu dữ liệu cho tiền/hp phải là Int32
-                        if (target.label !== 'HÀM ANTIBAN (FULL)' && type.toLowerCase() !== 'int32' && type.toLowerCase() !== 'int') return;
-                        found.push({ rva, name, type, label: target.label, hex: target.hex });
+                coreRules.forEach(rule => {
+                    if (rule.keys.some(k => nameL === k || nameL.includes(k))) {
+                        found.push({ rva, name, type, label: rule.label });
                     }
                 });
             }
@@ -69,24 +70,28 @@
         function render(data) {
             resultsArea.innerHTML = '';
             if(data.length === 0) {
-                resultsArea.innerHTML = '<p class="text-rose-500 font-bold">KHÔNG TÌM THẤY HÀM GET_GOLD/GEM NÀO CHUẨN!</p>';
+                resultsArea.innerHTML = '<p class="col-span-full text-center text-rose-500 font-black">KHÔNG TÌM THẤY HÀM PUBLIC INT32 NÀO!</p>';
                 return;
             }
             data.forEach(item => {
                 resultsArea.insertAdjacentHTML('beforeend', `
                     <div class="target-card shadow-2xl">
-                        <span class="absolute top-5 right-8 text-[10px] font-black text-emerald-500 uppercase">${item.type}</span>
-                        <h2 class="text-2xl font-black text-white italic mb-2 uppercase text-left border-l-4 border-emerald-500 pl-4">${item.label}</h2>
-                        <p class="text-[11px] text-slate-500 text-left font-mono mb-4 italic">Tên hàm: ${item.name}</p>
+                        <span class="type-badge">${item.type}</span>
+                        <h2 class="text-xl font-black text-white italic mb-1 uppercase tracking-tighter border-l-4 border-emerald-500 pl-4">${item.label}</h2>
+                        <p class="text-[10px] text-slate-500 font-mono mb-4 italic break-all">Function: ${item.name}</p>
                         
-                        <div class="bg-black/50 p-4 rounded-2xl border border-slate-800">
-                            <span class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Địa chỉ Address (Filza):</span>
-                            <span class="rva-display cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied Address!')">${item.rva}</span>
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Địa chỉ Address (Filza):</span>
+                                <span class="rva-val cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
+                            </div>
                             
-                            <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Copied Hex!')" class="btn-copy py-4 uppercase text-xs mt-2">
-                                COPY MÃ HEX DỨT ĐIỂM
-                            </button>
-                            <p class="text-[9px] text-slate-600 mt-3 font-mono">Mã này ép lên 999.999 cho hàm Int32</p>
+                            <div class="pt-4 border-t border-slate-800">
+                                <button onclick="navigator.clipboard.writeText('00 E1 00 D2 C0 03 5F D6'); alert('Đã Copy Mã Hex!')" class="hex-patch w-full py-4 rounded-xl text-xs uppercase tracking-[0.2em] active:scale-95">
+                                    COPY MÃ PATCH MAX
+                                </button>
+                                <p class="text-center text-[9px] text-slate-600 mt-2 font-mono">Patch: 00 E1 00 D2 C0 03 5F D6 (Max)</p>
+                            </div>
                         </div>
                     </div>
                 `);

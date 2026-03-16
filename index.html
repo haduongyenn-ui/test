@@ -2,30 +2,31 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v44.0 - The Master Filter</title>
+    <title>Analyzer v45.0 - Supreme Judge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .group-box { border-radius: 2.5rem; padding: 2rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; }
-        .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 5px; color: white; text-transform: uppercase; }
-        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
-        .analysis-box { background: rgba(16, 185, 129, 0.08); border-left: 5px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 6px; font-size: 13px; color: #fff; line-height: 1.6; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; }
+        .group-box { border-radius: 2.5rem; padding: 2.5rem; margin-bottom: 3.5rem; background: #0f172a; border: 2px solid #10b981; position: relative; }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { border-color: #10b981; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+        .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
+        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 12px; border-radius: 12px; border: 1px solid #10b981; text-align: center; display: block; }
+        .analysis-box { background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; line-height: 1.6; color: #fff; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; text-transform: uppercase; }
         .int { background: #059669; } .bool { background: #d97706; } .void { background: #7c3aed; } .float { background: #0891b2; }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 p-8 font-sans">
 
-    <div class="max-w-[1500px] mx-auto text-center">
+    <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-6xl font-black text-white italic uppercase tracking-tighter italic">MASTER <span class="text-emerald-500">FILTER</span> v44.0</h1>
-            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.5em]">Chỉ 1 RVA Chuẩn Nhất Cho 1 Công Dụng • Phân Tích Chuyên Sâu</p>
+            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter italic">SUPREME JUDGE <span class="text-emerald-500">v45.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.6em]">Lọc 1 RVA Chuẩn Nhất • Phân Tích Chi Tiết Tận Gốc</p>
         </header>
 
-        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> ĐỂ LẤY TỬ HUYỆT DUY NHẤT</p>
+        <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-20 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all">
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> VÀO ĐỂ GIÁM ĐỊNH</p>
         </div>
 
         <div id="resultsArea" class="space-y-16 text-left"></div>
@@ -35,16 +36,44 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // ĐỊNH NGHĨA NHÓM VÀ LOGIC CHỌN HÀM DUY NHẤT
-        const sniperLogic = [
-            { id: 'gold', label: '💰 NHÓM TIỀN TỆ', keys: ['gold', 'coin', 'money'], type: 'int', hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Hack Tiền: Ép giá trị tiền lên tối đa để mua sắm không giới hạn.' },
-            { id: 'gem', label: '💎 NHÓM KIM CƯƠNG', keys: ['gem', 'diamond', 'ruby', 'crystal'], type: 'int', hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Hack Kim Cương: Ép đá quý tối đa để quay hòm và mua đồ Premium.' },
-            { id: 'hp', label: '❤️ NHÓM MÁU (HP)', keys: ['hp', 'health', 'life'], type: 'int', hex: '00 E1 00 D2 C0 03 5F D6', desc: 'Hack Bất Tử: Ép lượng máu tối đa khiến nhân vật không thể bị tiêu diệt.' },
-            { id: 'dame', label: '⚔️ SỨC MẠNH (DAME)', keys: ['damage', 'attack'], type: 'float', hex: '00 00 C8 42 C0 03 5F D6', desc: 'One Hit: Nhân sát thương lên x100 lần. Đánh phát chết luôn.' },
-            { id: 'def', label: '🛡️ GIÁP BẤT TỬ', keys: ['received'], type: 'float', hex: '00 00 00 2D C0 03 5F D6', desc: 'Bất Tử: Giảm sát thương nhận vào về 0. Quái đánh không mất máu.' },
-            { id: 'speed', label: '🏃 TỐC ĐỘ (SPEED)', keys: ['speed', 'movespeed'], type: 'float', hex: '00 00 A0 40 C0 03 5F D6', desc: 'Speed Hack: Chạy nhanh gấp 5 lần. Giúp di chuyển cực linh hoạt.' },
-            { id: 'vip', label: '👑 ĐẶC QUYỀN VIP', keys: ['vip', 'premium', 'ispurchased'], type: 'bool', hex: '20 00 80 D2 C0 03 5F D6', desc: 'Mở Khóa VIP: Kích hoạt toàn bộ tính năng và vật phẩm dành cho người nạp tiền.' },
-            { id: 'antiban', label: '🛡️ ANTIBAN', keys: ['isbanned', 'detectcheat', 'checkintegrity'], type: 'bool', hex: '00 00 80 D2 C0 03 5F D6', desc: 'Chống Khóa Acc: Làm mù trình quét hack của game để chơi an toàn.' }
+        // HÀM DỊCH NGHĨA VÀ PHÂN TÍCH LOGIC TỰ ĐỘNG
+        function getExpertDescription(name, type) {
+            const n = name.toLowerCase();
+            const t = type.toLowerCase();
+            
+            const mapping = {
+                'gold': 'Hack Vàng: Ép chỉ số tiền tệ chính trong game lên tối đa. Giúp bạn mua sắm trang bị và nâng cấp nhân vật thoải mái.',
+                'gem': 'Hack Kim Cương: Điều chỉnh tài nguyên quý hiếm. Dùng để mở khóa hòm báu, quay tướng hoặc mua vật phẩm Premium.',
+                'diamond': 'Hack Kim Cương: Điều chỉnh tài nguyên quý hiếm. Dùng để mở khóa hòm báu, quay tướng hoặc mua vật phẩm Premium.',
+                'hp': 'Bất Tử Máu: Tăng giới hạn sinh lực lên mức tối đa. Kết hợp với hồi máu sẽ khiến nhân vật không thể bị tiêu diệt.',
+                'health': 'Bất Tử Máu: Tăng giới hạn sinh lực lên mức tối đa. Kết hợp với hồi máu sẽ khiến nhân vật không thể bị tiêu diệt.',
+                'mp': 'Năng Lượng Vô Hạn: Ép chỉ số Mana/Energy. Cho phép bạn tung kỹ năng liên tục mà không cần chờ hồi năng lượng.',
+                'mana': 'Năng Lượng Vô Hạn: Ép chỉ số Mana/Energy. Cho phép bạn tung kỹ năng liên tục mà không cần chờ hồi năng lượng.',
+                'vip': 'Kích Hoạt VIP: Mở khóa vĩnh viễn các đặc quyền thành viên, quà tặng hằng ngày và skin giới hạn miễn phí.',
+                'premium': 'Kích Hoạt Premium: Bẻ khóa các tính năng trả phí, giúp bạn trải nghiệm trọn vẹn game mà không mất tiền.',
+                'unlocked': 'Mở Khóa: Tự động mở toàn bộ các màn chơi, nhân vật hoặc vật phẩm đang bị khóa bởi cấp độ.',
+                'ispurchased': 'Hack Mua Hàng: Game sẽ tin rằng bạn đã thanh toán tiền thật cho gói nạp này (Bypass IAP).',
+                'damage': 'One Hit (Sát thương): Nhân lực tấn công của bạn lên gấp 100 lần. Tiêu diệt quái và Boss chỉ trong 1 đòn.',
+                'attack': 'One Hit (Sát thương): Nhân lực tấn công của bạn lên gấp 100 lần. Tiêu diệt quái và Boss chỉ trong 1 đòn.',
+                'speed': 'Speed Hack: Chạy nhanh như chớp trên bản đồ. Giúp né đòn và hoàn thành nhiệm vụ nhanh hơn.',
+                'received': 'Giáp Bất Tử: Nhân sát thương từ kẻ địch với 0. Bạn sẽ hoàn toàn không mất máu khi bị trúng đòn.',
+                'takedamage': 'Chặn Trừ Máu: Thoát hàm xử lý sát thương ngay lập tức. Kẻ địch đánh vào sẽ không có hiệu lực.',
+                'isbanned': 'Antiban: Trả về kết quả "Không bị khóa". Giúp tài khoản lách qua trình kiểm tra của máy chủ.',
+                'detectcheat': 'Tắt Quét Hack: Làm mù hệ thống bảo mật nội bộ, cho phép bạn sử dụng bản Mod an toàn hơn.'
+            };
+
+            for (let key in mapping) {
+                if (n.includes(key)) return mapping[key];
+            }
+            return `Điều chỉnh chỉ số <b>${name}</b>: Tác động trực tiếp vào cơ sở dữ liệu của nhân vật để thay đổi thông số này theo ý muốn.`;
+        }
+
+        const config = [
+            { id: 'money', label: '💰 NHÓM TIỀN TỆ & TÀI NGUYÊN', keys: ['gold', 'coin', 'diamond', 'gem', 'money'], type: 'int', hex: '00 E1 00 D2 C0 03 5F D6' },
+            { id: 'stats', label: '❤️ NHÓM SINH TỒN & CHỈ SỐ', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], type: 'int', hex: '00 E1 00 D2 C0 03 5F D6' },
+            { id: 'combat', label: '⚔️ NHÓM SỨC MẠNH & TỐC ĐỘ', keys: ['damagemultiplier', 'damagereceivedmultiplier', 'speed', 'movespeed'], type: 'float', hex: '00 00 C8 42 C0 03 5F D6' },
+            { id: 'vip', label: '🛒 NHÓM ĐẶC QUYỀN & VIP', keys: ['isvip', 'ispremium', 'isunlocked', 'ispurchased'], type: 'bool', hex: '20 00 80 D2 C0 03 5F D6' },
+            { id: 'safety', label: '🛡️ NHÓM BẢO MẬT & ANTIBAN', keys: ['isbanned', 'detectcheat', 'checkintegrity'], type: 'bool', hex: '00 00 80 D2 C0 03 5F D6', single: false }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -63,60 +92,69 @@
                 rawMatches.push({ rva: match[1], type: match[2], name: match[3], nameL: match[3].toLowerCase() });
             }
 
-            let finalWinners = [];
-            // THUẬT TOÁN CHỈ CHỌN 1 HÀM DUY NHẤT CHO MỖI NHÓM CÔNG DỤNG
-            sniperLogic.forEach(group => {
-                let candidate = null;
-                // Ưu tiên tìm hàm khớp chính xác từ khóa trước (Ví dụ: get_gold hơn get_goldmultiplier)
-                for (let key of group.keys) {
-                    candidate = rawMatches.find(m => m.nameL === 'get_' + key || m.nameL === 'is' + key);
-                    if (!candidate) candidate = rawMatches.find(m => m.nameL.includes(key));
-                    
-                    if (candidate) {
-                        // Kiểm tra kiểu dữ liệu
-                        const tL = candidate.type.toLowerCase();
-                        let typeOk = false;
-                        if (group.type === 'int') typeOk = tL === 'int32' || tL === 'int';
-                        if (group.type === 'bool') typeOk = tL === 'bool' || tL === 'boolean';
-                        if (group.type === 'float') typeOk = tL === 'single' || tL === 'float';
-                        
-                        if (typeOk) {
-                            finalWinners.push({ ...candidate, ...group });
-                            break; // Dừng lại ngay khi tìm thấy 1 hàm chuẩn nhất cho nhóm này
-                        }
+            let results = {};
+            config.forEach(group => {
+                let candidates = rawMatches.filter(m => {
+                    const tL = m.type.toLowerCase();
+                    const nameOk = group.keys.some(k => m.nameL.includes(k));
+                    let typeOk = false;
+                    if (group.type === 'int') typeOk = tL === 'int32' || tL === 'int';
+                    if (group.type === 'bool') typeOk = tL === 'bool' || tL === 'boolean';
+                    if (group.type === 'float') typeOk = tL === 'single' || tL === 'float';
+                    return nameOk && typeOk;
+                });
+
+                if (candidates.length > 0) {
+                    if (group.single === false) {
+                        results[group.id] = candidates; 
+                    } else {
+                        // CHỈ LẤY 1 RVA CHUẨN NHẤT CHO MỖI CÔNG DỤNG TRONG NHÓM
+                        let uniqueByFunction = [];
+                        group.keys.forEach(key => {
+                            let best = candidates.find(c => c.nameL === 'get_' + key || c.nameL === 'is' + key);
+                            if (!best) best = candidates.find(c => c.nameL.includes(key));
+                            if (best && !uniqueByFunction.some(u => u.nameL === best.nameL)) {
+                                uniqueByFunction.push(best);
+                            }
+                        });
+                        results[group.id] = uniqueByFunction;
                     }
                 }
             });
-            render(finalWinners);
+            render(results);
         }
 
         function render(data) {
             resultsArea.innerHTML = '';
-            if (data.length === 0) {
-                resultsArea.innerHTML = '<p class="text-center text-rose-500 font-black">KHÔNG TÌM THẤY TỬ HUYỆT NÀO!</p>';
-                return;
-            }
+            config.forEach(group => {
+                const items = data[group.id];
+                if (!items) return;
+                resultsArea.insertAdjacentHTML('beforeend', `
+                    <div class="group-box">
+                        <h2 class="text-3xl font-black mb-10 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">${group.label}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${items.map(item => {
+                                const detailDesc = getExpertDescription(item.name, item.type);
+                                let hex = group.hex;
+                                if (item.nameL.includes('received')) hex = '00 00 00 2D C0 03 5F D6';
+                                if (item.nameL.includes('banned') || item.nameL.includes('cheat')) hex = '00 00 80 D2 C0 03 5F D6';
 
-            resultsArea.insertAdjacentHTML('beforeend', `
-                <div class="group-box">
-                    <h2 class="text-3xl font-black mb-10 uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">DANH SÁCH TỬ HUYỆT DUY NHẤT</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${data.map(item => `
-                            <div class="card p-6 shadow-2xl">
-                                <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float')}">${item.type}</span>
-                                <h3 class="text-emerald-400 font-black text-lg mb-1 italic uppercase">${item.label}</h3>
-                                <div class="text-[11px] font-bold text-slate-500 mb-4 break-all italic leading-tight">${item.name}()</div>
-                                <div class="analysis-box">🎯 <b>Công dụng chi tiết:</b><br>${item.desc}</div>
-                                <div class="my-6">
-                                    <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center italic">Địa chỉ Address Filza:</div>
-                                    <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</span>
-                                </div>
-                                <button onclick="navigator.clipboard.writeText('${item.hex}'); alert('Copied Hex!')" class="hex-btn active:scale-95 text-[10px]">Copy Mã Hex Dứt Điểm: ${item.hex}</button>
-                            </div>
-                        `).join('')}
+                                return `
+                                <div class="card p-6 shadow-2xl">
+                                    <span class="type-tag ${item.type.toLowerCase().includes('int') ? 'int' : (item.type.toLowerCase().includes('void') ? 'void' : (item.type.toLowerCase().includes('bool') ? 'bool' : 'float'))}">${item.type}</span>
+                                    <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all leading-tight">${item.name}()</div>
+                                    <div class="analysis-box">🎯 <b>Chi tiết công dụng:</b><br>${detailDesc}</div>
+                                    <div class="my-6">
+                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 text-center">Địa chỉ Address Filza:</div>
+                                        <span class="rva-val cursor-pointer active:scale-95 transition-all" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Đã Copy RVA!')">${item.rva}</span>
+                                    </div>
+                                    <button onclick="navigator.clipboard.writeText('${hex}'); alert('Đã Copy Hex!')" class="hex-btn active:scale-95 text-[10px]">Copy Mã Patch: ${hex}</button>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
-                </div>
-            `);
+                `);
+            });
         }
     </script>
 </body>

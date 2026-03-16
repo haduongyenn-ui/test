@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analyzer v50.1 Smart - Visual Patcher</title>
+    <title>Analyzer v50.2 Key-Only - Visual Patcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -231,10 +231,10 @@
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-7">
             <h1 class="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">
-                VISUAL PATCHER <span class="text-emerald-500">v50.1 SMART</span>
+                VISUAL PATCHER <span class="text-emerald-500">v50.2 KEY-ONLY</span>
             </h1>
             <p class="text-slate-500 font-bold text-[11px] mt-3 uppercase tracking-[0.35em]">
-                Full Keyword • Smart Genre Guess • Dedup • Best Match
+                Key Match Only • Prefer Get • Remove Set • Smart Best Match
             </p>
         </header>
 
@@ -366,54 +366,14 @@
         ];
 
         const genreProfiles = [
-            {
-                id: 'shooter',
-                label: 'Shooter / bắn súng',
-                keys: ['ammo','bullet','reload','reloadtime','weapon','gun','fire','shoot','crosshair','recoil','magazine'],
-                preferredGroups: ['combat','cooldown','stats','action']
-            },
-            {
-                id: 'rpg',
-                label: 'RPG / nhập vai',
-                keys: ['skill','spell','mana','hp','health','damage','quest','level','exp','boss','inventory'],
-                preferredGroups: ['stats','combat','cooldown','currency','action']
-            },
-            {
-                id: 'moba',
-                label: 'MOBA / skill combat',
-                keys: ['hero','skill','cooldown','mana','ability','tower','creep','lane'],
-                preferredGroups: ['cooldown','combat','stats']
-            },
-            {
-                id: 'idle',
-                label: 'Idle / clicker / afk',
-                keys: ['idle','offline','reward','income','profit','earn','coin','cash','vip'],
-                preferredGroups: ['currency','vip','action']
-            },
-            {
-                id: 'gacha',
-                label: 'Gacha / summon',
-                keys: ['summon','gacha','draw','pull','banner','ticket','shard','star','rarity'],
-                preferredGroups: ['currency','vip']
-            },
-            {
-                id: 'card',
-                label: 'Card / strategy',
-                keys: ['card','deck','energy','mana','cost','turn','draw','rarity'],
-                preferredGroups: ['currency','stats','vip']
-            },
-            {
-                id: 'survival',
-                label: 'Survival / sandbox',
-                keys: ['hunger','thirst','stamina','health','craft','survive','armor','damage'],
-                preferredGroups: ['stats','combat','action','currency']
-            },
-            {
-                id: 'runner',
-                label: 'Runner / endless',
-                keys: ['run','runner','speed','jump','distance','coin','score'],
-                preferredGroups: ['combat','currency']
-            }
+            { id: 'shooter', label: 'Shooter / bắn súng', keys: ['ammo','bullet','reload','reloadtime','weapon','gun','fire','shoot','crosshair','recoil','magazine'], preferredGroups: ['combat','cooldown','stats','action'] },
+            { id: 'rpg', label: 'RPG / nhập vai', keys: ['skill','spell','mana','hp','health','damage','quest','level','exp','boss','inventory'], preferredGroups: ['stats','combat','cooldown','currency','action'] },
+            { id: 'moba', label: 'MOBA / skill combat', keys: ['hero','skill','cooldown','mana','ability','tower','creep','lane'], preferredGroups: ['cooldown','combat','stats'] },
+            { id: 'idle', label: 'Idle / clicker / afk', keys: ['idle','offline','reward','income','profit','earn','coin','cash','vip'], preferredGroups: ['currency','vip','action'] },
+            { id: 'gacha', label: 'Gacha / summon', keys: ['summon','gacha','draw','pull','banner','ticket','shard','star','rarity'], preferredGroups: ['currency','vip'] },
+            { id: 'card', label: 'Card / strategy', keys: ['card','deck','energy','mana','cost','turn','draw','rarity'], preferredGroups: ['currency','stats','vip'] },
+            { id: 'survival', label: 'Survival / sandbox', keys: ['hunger','thirst','stamina','health','craft','survive','armor','damage'], preferredGroups: ['stats','combat','action','currency'] },
+            { id: 'runner', label: 'Runner / endless', keys: ['run','runner','speed','jump','distance','coin','score'], preferredGroups: ['combat','currency'] }
         ];
 
         function showToast(msg) {
@@ -453,12 +413,50 @@
             return String(type || 'không rõ');
         }
 
+        function splitMethodWords(name) {
+            return String(name || '')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/_/g, ' ')
+                .toLowerCase()
+                .split(/\s+/)
+                .filter(Boolean);
+        }
+
+        function isGetter(name) {
+            const n = String(name || '').toLowerCase();
+            return n.startsWith('get_') || n.startsWith('get');
+        }
+
+        function isSetter(name) {
+            const n = String(name || '').toLowerCase();
+            return n.startsWith('set_') || n.startsWith('set');
+        }
+
         function normalizeName(name) {
             return String(name || '')
                 .toLowerCase()
                 .replace(/^(get_|set_|is_|has_|get|set|is|has)/, '')
                 .replace(/_/g, '')
                 .replace(/(value|data|info|state)$/g, '');
+        }
+
+        function matchKeyScore(name, key) {
+            if (isSetter(name)) return 0;
+
+            const words = splitMethodWords(name);
+            const n = String(name || '').toLowerCase();
+            const k = String(key || '').toLowerCase();
+
+            if (n === 'get_' + k || n === 'get' + k) return 300;
+            if (n === 'is_' + k || n === 'is' + k) return 280;
+            if (n === 'has_' + k || n === 'has' + k) return 260;
+
+            if ((n.startsWith('get_') || n.startsWith('get')) && words.includes(k)) return 220;
+            if ((n.startsWith('is_') || n.startsWith('is') || n.startsWith('has_') || n.startsWith('has')) && words.includes(k)) return 200;
+
+            if (words.includes(k)) return 120;
+
+            return 0;
         }
 
         function inferGameProfile(raw) {
@@ -486,74 +484,75 @@
         function getDetailedAnalysis(name, type, item, profile) {
             const n = String(name || '').toLowerCase();
             const tLabel = typeLabel(type);
+            const profileText = profile && profile.primaryLabel ? profile.primaryLabel : 'chưa rõ';
+
             const rules = [
                 {
                     keys: ['currency','resource','gold','coin','money','cash','credit','token','point','points','score','wallet','balance','diamond','gem','ruby','emerald','crystal','crystals','star','stars','coupon','ticket','voucher','medal','medals'],
                     label: 'Tiền tệ / tài nguyên',
                     what: 'Thường là vàng, coin, gem, kim cương hoặc tài nguyên dùng để mua, đổi hoặc nâng cấp.',
                     use: 'Hay dùng để hiển thị số dư, số lượng tài nguyên hoặc điểm tích lũy.',
-                    note: 'Nếu game thiên về idle/gacha thì nhóm này thường rất quan trọng.'
+                    note: 'Tool chỉ nhận diện theo đúng key trong nhóm này.'
                 },
                 {
                     keys: ['hp','health','life','maxhp','maxhealth','mp','mana','energy','stamina','rage','shield','armor'],
                     label: 'HP / MP / năng lượng',
                     what: 'Thường là máu, mana, thể lực, giáp hoặc chỉ số sinh tồn.',
                     use: 'Hay xuất hiện ở thanh máu, thanh mana hoặc trạng thái chiến đấu.',
-                    note: 'Life có lúc là số mạng; Energy/Stamina có thể là thể lực.'
+                    note: 'Tool ưu tiên getter thật sự, không lấy setter.'
                 },
                 {
                     keys: ['damage','attack','atk','power','hit','speed','movespeed','runspeed','attackspeed','multiplier','rate','ratio','critical','crit','critdamage','critrate','received','takendamage'],
                     label: 'Damage / speed',
                     what: 'Thường là sát thương, tốc độ đánh, tốc độ chạy hoặc hệ số chiến đấu.',
                     use: 'Hay dùng trong phần tính damage, crit, tốc độ hoặc hệ số buff/debuff.',
-                    note: 'Nếu dump nghiêng về shooter / rpg thì nhóm này thường nằm top ưu tiên.'
+                    note: 'Nhóm này chỉ match bằng key, không match bừa kiểu includes lung tung.'
                 },
                 {
                     keys: ['cooldown','cd','delay','interval','reuse','reusetime','cooldowntime','skillcooldown','attackcooldown','abilitycooldown','casttime','waittime','reload','reloadtime'],
                     label: 'Hồi chiêu / delay',
                     what: 'Thường là thời gian chờ giữa các kỹ năng hoặc hành động.',
                     use: 'Hay liên quan tới hồi chiêu skill, cast time, reload time hoặc khoảng chờ giữa 2 lần dùng.',
-                    note: 'Nếu dump nghiêng về shooter / moba / rpg thì nhóm này rất đáng xem.'
+                    note: 'Ưu tiên get_Cooldown, get_ReloadTime, get_CastTime.'
                 },
                 {
                     keys: ['vip','premium','pro','unlocked','unlock','ispurchased','purchased','owned','hasitem','isowned','isvip','ispro'],
                     label: 'VIP / unlock',
                     what: 'Thường là kiểm tra đã mở khóa, đã mua hoặc đã sở hữu.',
                     use: 'Dùng để xác định trạng thái đúng/sai của quyền hoặc món đồ.',
-                    note: 'Các tên bắt đầu bằng is... hoặc has... thường đáng ưu tiên hơn.'
+                    note: 'Ưu tiên các hàm is..., has..., get_... có key rõ nghĩa.'
                 },
                 {
                     keys: ['banned','ban','isbanned','detect','detected','check','verify','validation','security','anticheat','cheat','isvalid','valid'],
                     label: 'Check / verify',
                     what: 'Thường là hàm kiểm tra điều kiện hoặc xác minh trạng thái.',
                     use: 'Có thể là check logic bình thường hoặc xác thực nội bộ.',
-                    note: 'Nhóm này dễ trúng rộng nên chỉ nên xem tên rõ nghĩa.'
+                    note: 'Nhóm này hiện chỉ match đúng các key safety.'
                 },
                 {
                     keys: ['takedamage','damage','hurt','spend','use','consume','cost','pay','deduct','add','remove','give','reward'],
                     label: 'Action',
                     what: 'Thường là hàm xử lý hành động như dùng vật phẩm, trừ tài nguyên hoặc cộng thưởng.',
                     use: 'Thiên về xử lý logic thực thi hơn là chỉ đọc dữ liệu.',
-                    note: 'Nếu return là void thì đây thường là hàm hành động.'
+                    note: 'Nếu return là void thì thường là hàm hành động.'
                 }
             ];
 
             let matched = null;
             for (const rule of rules) {
-                if (rule.keys.some(k => n.includes(k))) {
+                if (rule.keys.some(k => matchKeyScore(name, k) > 0)) {
                     matched = rule;
                     break;
                 }
             }
 
-            const profileText = profile && profile.primaryLabel ? profile.primaryLabel : 'chưa rõ';
             if (!matched) {
                 return `
                     <div class="analysis-head">🎯 Phân tích nhanh</div>
                     <div class="analysis-mini">
-                        <div><b>Là gì:</b> Chưa đủ từ khóa để xếp nhóm rõ ràng.</div>
+                        <div><b>Là gì:</b> Chưa đủ key để xếp nhóm rõ ràng.</div>
                         <div><b>Dùng làm gì:</b> Có thể là hàm lấy dữ liệu hoặc kiểm tra trạng thái.</div>
-                        <div><b>Lưu ý:</b> Kiểu trả về là <b>${escapeHtml(tLabel)}</b>. Rank hiện tại <b>#${item.rankIndex}</b>, score <b>${item.rankScore}</b>. Thể loại đoán được: <b>${escapeHtml(profileText)}</b>.</div>
+                        <div><b>Lưu ý:</b> Kiểu trả về là <b>${escapeHtml(tLabel)}</b>. Rank hiện tại <b>#${item.rankIndex}</b>, score <b>${item.rankScore}</b>. Dạng game đoán được: <b>${escapeHtml(profileText)}</b>.</div>
                     </div>
                 `;
             }
@@ -570,29 +569,24 @@
 
         function scoreMethod(method, group, profile) {
             const name = (method.name || '').toLowerCase();
-            let score = 0;
+            let bestKeyScore = 0;
 
             for (const key of group.keys) {
-                if (name === 'get_' + key) score += 140;
-                else if (name === 'is_' + key || name === 'is' + key) score += 130;
-                else if (name === 'has_' + key || name === 'has' + key) score += 120;
-                else if (name.startsWith('get_') && name.includes(key)) score += 115;
-                else if (name.startsWith('is') && name.includes(key)) score += 108;
-                else if (name.startsWith('has') && name.includes(key)) score += 102;
-                else if (name.includes('_' + key)) score += 78;
-                else if (name.endsWith(key)) score += 72;
-                else if (name.includes(key)) score += 58;
+                bestKeyScore = Math.max(bestKeyScore, matchKeyScore(name, key));
             }
+
+            if (bestKeyScore <= 0) return 0;
+
+            let score = bestKeyScore;
 
             if (method.args === '') score += 18;
             if (method.access === 'public') score += 10;
             if (!method.isStatic) score += 4;
-
             if (profile && profile.preferredGroups && profile.preferredGroups.includes(group.id)) score += 16;
 
             if (name.length > 32) score -= 8;
             if (name.includes('tmp') || name.includes('test') || name.includes('debug')) score -= 14;
-            if (name.startsWith('set_') || name.startsWith('set')) score -= 40;
+            if (isSetter(name)) score -= 1000;
 
             return score;
         }
@@ -611,13 +605,13 @@
         }
 
         function rankCandidates(candidates, group, profile) {
-            const ranked = candidates.map(item => {
-                const rankScore = scoreMethod(item, group, profile);
-                return { ...item, rankScore };
-            }).sort((a, b) => {
-                if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
-                return a.name.localeCompare(b.name);
-            });
+            const ranked = candidates
+                .map(item => ({ ...item, rankScore: scoreMethod(item, group, profile) }))
+                .filter(item => item.rankScore > 0)
+                .sort((a, b) => {
+                    if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
+                    return a.name.localeCompare(b.name);
+                });
 
             const deduped = dedupeRanked(ranked);
             return deduped.map((item, index) => ({
@@ -650,7 +644,7 @@
                         <div><b>Độ tin cậy:</b> ${profile.confidence}%</div>
                         <div><b>Ưu tiên nhóm:</b> ${preferred || '<span class="pill">Không rõ</span>'}</div>
                         <div><b>Tín hiệu tìm thấy:</b> ${topScores || '<span class="pill">Không đủ dữ liệu</span>'}</div>
-                        <div><b>Cách lọc:</b> Tool đang ưu tiên <b>get_</b>, tự <b>rank</b>, tự <b>bỏ hàm trùng</b>, và highlight <b>best match</b> màu đỏ để dễ tìm hơn.</div>
+                        <div><b>Cách lọc:</b> Tool hiện chỉ match đúng <b>key</b> trong từng nhóm, ưu tiên <b>get_</b>, tự bỏ <b>set_</b>, bỏ bớt hàm trùng và highlight <b>best match</b>.</div>
                     </div>
                 </div>
             `;
@@ -672,7 +666,7 @@
                 return;
             }
             const payload = {
-                version: '50.1 SMART',
+                version: '50.2 KEY-ONLY',
                 gameProfile: lastProfile,
                 totalRawMethods: lastRawMethods.length,
                 totalMatchedMethods: lastMatchedMethods.length,
@@ -688,7 +682,7 @@
                 return;
             }
 
-            let md = '# Visual Patcher v50.1 SMART Report\n\n';
+            let md = '# Visual Patcher v50.2 KEY-ONLY Report\n\n';
             if (lastProfile) {
                 md += `- Game Profile: ${lastProfile.primaryLabel}\n`;
                 md += `- Confidence: ${lastProfile.confidence}%\n`;
@@ -816,7 +810,7 @@
 
         function processDump(content) {
             const raw = [];
-            const regex = /\/\/\s*RVA:\s*(0x[0-9A-Fa-f]+)[^\n]*\n\s*(public|private|protected|internal)\s+(static\s+)?([\w<>\[\],\.]+)\s+(\w+)\s*\(([^)]*)\)\s*\{\s*\}/g;
+            const regex = /\/\/\s*RVA:\s*(0x[0-9A-Fa-f]+)[^\n]*\n\s*(public)\s+(static\s+)?([\w<>\[\],\.]+)\s+(\w+)\s*\(([^)]*)\)\s*\{\s*\}/g;
 
             let match;
             while ((match = regex.exec(content)) !== null) {
@@ -848,14 +842,16 @@
             config.forEach(group => {
                 const candidates = raw.filter(m => {
                     const tL = m.type.toLowerCase();
-                    const nameOk = group.keys.some(k => m.nameL.includes(k));
                     const typeOk =
                         (group.type === 'int' && (tL === 'int32' || tL === 'int')) ||
                         (group.type === 'bool' && (tL === 'bool' || tL === 'boolean')) ||
                         (group.type === 'float' && tL === 'float') ||
                         (group.type === 'void' && tL === 'void');
 
-                    return nameOk && typeOk;
+                    if (!typeOk) return false;
+
+                    const keyOk = group.keys.some(k => matchKeyScore(m.name, k) > 0);
+                    return keyOk;
                 });
 
                 if (candidates.length > 0) {
@@ -886,9 +882,7 @@
                 const matched = items.filter(item =>
                     item.name.toLowerCase().includes(q) ||
                     item.type.toLowerCase().includes(q) ||
-                    item.rva.toLowerCase().includes(q) ||
-                    (item.access || '').toLowerCase().includes(q) ||
-                    (item.args || '').toLowerCase().includes(q)
+                    item.rva.toLowerCase().includes(q)
                 );
 
                 if (matched.length) filtered[group.id] = matched;
@@ -908,8 +902,8 @@
 
             statsBar.innerHTML = `
                 <div class="flex flex-wrap gap-3 justify-center">
-                    <div class="stats-chip">Tổng method quét được: <span class="text-emerald-400">${totalRaw}</span></div>
-                    <div class="stats-chip">Tổng method sau lọc thông minh: <span class="text-emerald-400">${totalMatched}</span></div>
+                    <div class="stats-chip">Tổng method public/public static quét được: <span class="text-emerald-400">${totalRaw}</span></div>
+                    <div class="stats-chip">Tổng method sau match key: <span class="text-emerald-400">${totalMatched}</span></div>
                     ${query ? `<div class="stats-chip">Search: <span class="text-emerald-400">${escapeHtml(query)}</span></div>` : ''}
                 </div>
             `;
@@ -917,7 +911,7 @@
             if (!totalRaw) {
                 resultsArea.innerHTML = `
                     <div class="bg-red-950/30 border border-red-800 text-red-300 p-6 rounded-3xl text-center font-bold">
-                        Không đọc được method nào từ file này.
+                        Không đọc được method public hoặc public static nào từ file này.
                     </div>
                 `;
                 return;
@@ -926,7 +920,7 @@
             if (!totalMatched) {
                 resultsArea.innerHTML = `
                     <div class="bg-yellow-950/30 border border-yellow-800 text-yellow-300 p-6 rounded-3xl text-center font-bold">
-                        Không tìm thấy method phù hợp với rule hiện tại.
+                        Không tìm thấy method phù hợp với keys hiện tại.
                     </div>
                 `;
                 return;
@@ -944,7 +938,7 @@
                             <h2 class="text-xl md:text-2xl font-black uppercase italic tracking-widest text-emerald-500 border-l-8 border-emerald-500 pl-4">
                                 ${group.label}
                             </h2>
-                            <div class="text-slate-500 text-sm font-bold">Đã chọn thông minh: ${items.length}</div>
+                            <div class="text-slate-500 text-sm font-bold">Đã chọn theo key: ${items.length}</div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="grid-${groupId}">

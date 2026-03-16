@@ -2,19 +2,20 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Analyzer v46.0 - Ultimate Patcher</title>
+    <title>Analyzer v47.0 - Final Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         .group-box { border-radius: 2.5rem; padding: 2.5rem; margin-bottom: 3rem; background: #0f172a; border: 2px solid #10b981; }
-        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; overflow: hidden; }
+        .card { background: #020617; border: 1px solid #1e293b; border-radius: 1.5rem; transition: 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         .card:hover { border-color: #10b981; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
         .type-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 6px; color: white; text-transform: uppercase; }
-        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 10px; border-radius: 10px; border: 1px solid #10b981; text-align: center; display: block; }
-        .analysis-box { background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; color: #fff; }
-        .hex-select { background: #1e293b; color: #10b981; border: 1px solid #10b981; border-radius: 8px; padding: 8px; width: 100%; font-weight: bold; font-size: 12px; margin-bottom: 10px; }
-        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 12px; border-radius: 10px; text-transform: uppercase; }
+        .rva-val { font-family: 'Courier New', monospace; color: #f43f5e; font-size: 1.3rem; font-weight: 900; background: #000; padding: 12px; border-radius: 10px; border: 1px solid #10b981; text-align: center; display: block; cursor: pointer; }
+        .analysis-box { background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 12px; line-height: 1.6; color: #fff; }
+        .hex-select { background: #1e293b; color: #10b981; border: 1px solid #10b981; border-radius: 8px; padding: 10px; width: 100%; font-weight: bold; font-size: 12px; margin-bottom: 12px; outline: none; }
+        .hex-btn { background: #10b981; color: #000; font-weight: 900; transition: 0.2s; width: 100%; padding: 14px; border-radius: 12px; text-transform: uppercase; }
+        .hex-btn:active { transform: scale(0.95); }
         .int { background: #059669; } .bool { background: #d97706; } .void { background: #7c3aed; } .float { background: #0891b2; }
     </style>
 </head>
@@ -22,12 +23,12 @@
 
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-12">
-            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter">ULTIMATE <span class="text-emerald-500">PATCHER</span> v46.0</h1>
-            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.5em]">Tích Hợp Kho Mã Hex • Lọc 1 RVA Chuẩn Nhất</p>
+            <h1 class="text-7xl font-black text-white italic uppercase tracking-tighter">FINAL MASTER <span class="text-emerald-500">v47.0</span></h1>
+            <p class="text-slate-500 font-bold text-xs mt-4 uppercase tracking-[0.6em]">Full Mô Tả • Copy RVA Cắt 0x • Kho Mã Hex Của Bạn</p>
         </header>
 
         <div id="dropZone" class="border-4 border-dashed border-slate-800 rounded-[4rem] p-16 text-center bg-slate-900/20 hover:border-emerald-500 cursor-pointer mb-16 transition-all">
-            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase">DUMP.CS</span> ĐỂ NHẬN MÃ HEX TƯƠNG ỨNG</p>
+            <p class="text-2xl text-slate-500 font-black uppercase italic tracking-widest">THẢ <span class="text-emerald-500 underline uppercase italic">DUMP.CS</span> VÀO ĐỂ GIÁM ĐỊNH</p>
         </div>
 
         <div id="resultsArea" class="space-y-16 text-left"></div>
@@ -37,7 +38,7 @@
         const dropZone = document.getElementById('dropZone');
         const resultsArea = document.getElementById('resultsArea');
 
-        // KHO MÃ PATCH BẠN CUNG CẤP
+        // KHO MÃ HEX BẠN CUNG CẤP
         const hexLibrary = {
             int: [
                 { val: '1.000.000', hex: '00488852E001A072C0035FD6' },
@@ -46,7 +47,8 @@
                 { val: '10', hex: '40018052C0035FD6' },
                 { val: '1', hex: '20008052C0035FD6' },
                 { val: '0', hex: '00008052C0035FD6' },
-                { val: '-1', hex: '00008012C0035FD6' }
+                { val: '-1', hex: '00008012C0035FD6' },
+                { val: '-1.000', hex: 'E07C8012C0035FD6' }
             ],
             float: [
                 { val: '1.000.000', hex: '08808452882EA9720001271EC0035FD6' },
@@ -55,24 +57,48 @@
                 { val: '10', hex: '0090241EC0035FD6' },
                 { val: '1', hex: '00102E1EC0035FD6' },
                 { val: '0.25', hex: '00102A1EC0035FD6' },
-                { val: '0', hex: 'E003271EC0035FD6' }
+                { val: '0', hex: 'E003271EC0035FD6' },
+                { val: '-1.000', hex: '488FB8520001271EC0035FD6' }
             ],
             bool: [
-                { val: 'TRUE (Bật)', hex: '20008052C0035FD6' },
+                { val: 'TRUE (Kích hoạt)', hex: '20008052C0035FD6' },
                 { val: 'FALSE (Tắt)', hex: '00008052C0035FD6' }
             ],
             void: [
-                { val: 'RET (Ngắt hàm)', hex: 'C0035FD6' }
+                { val: 'RET (Bỏ qua hành động)', hex: 'C0035FD6' }
             ]
         };
 
-        const sniperConfig = [
+        // TỪ ĐIỂN MÔ TẢ CHI TIẾT
+        function getDetailedAnalysis(name, type) {
+            const n = name.toLowerCase();
+            const mapping = {
+                'gold': 'Hack Vàng: Ép chỉ số tiền tệ chính. Giúp bạn mua sắm và nâng cấp nhân vật thoải mái.',
+                'gem': 'Hack Kim Cương: Điều chỉnh tài nguyên quý hiếm để quay hòm hoặc mua đồ Premium.',
+                'diamond': 'Hack Kim Cương: Điều chỉnh tài nguyên quý hiếm để quay hòm hoặc mua đồ Premium.',
+                'hp': 'Bất Tử Máu: Tăng sinh lực tối đa. Khi kết hợp với hồi máu sẽ không bao giờ chết.',
+                'health': 'Bất Tử Máu: Tăng sinh lực tối đa. Khi kết hợp với hồi máu sẽ không bao giờ chết.',
+                'mp': 'Năng Lượng Vô Hạn: Tung kỹ năng liên tục mà không cần chờ hồi Mana.',
+                'vip': 'Kích Hoạt VIP: Mở khóa đặc quyền hội viên, skin hiếm miễn phí.',
+                'damage': 'Sát Thương (One Hit): Nhân lực tấn công lên cực đại. Tiêu diệt quái chỉ trong 1 đòn.',
+                'attack': 'Sát Thương (One Hit): Nhân lực tấn công lên cực đại. Tiêu diệt quái chỉ trong 1 đòn.',
+                'speed': 'Speed Hack: Chạy nhanh như chớp. Giúp di chuyển linh hoạt trên bản đồ.',
+                'received': 'Giáp Bất Tử: Nhân sát thương quái đánh vào với 0. Bạn sẽ hoàn toàn không mất máu.',
+                'takedamage': 'Chặn Trừ Máu: Ngắt hàm xử lý sát thương khi bị đánh (Bất tử Void).',
+                'isbanned': 'Antiban: Trả về trạng thái "Sạch" giúp lách qua trình kiểm tra của server.',
+                'detectcheat': 'Tắt Quét Hack: Làm mù hệ thống bảo mật nội bộ để dùng Mod an toàn hơn.'
+            };
+            for (let key in mapping) { if (n.includes(key)) return mapping[key]; }
+            return `Điều chỉnh chỉ số <b>${name}</b>: Tác động trực tiếp vào lõi game để thay đổi thông số này.`;
+        }
+
+        const config = [
             { id: 'money', label: '💰 NHÓM TÀI NGUYÊN (INT)', keys: ['gold', 'coin', 'diamond', 'gem', 'money'], type: 'int' },
-            { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'mp', 'mana'], type: 'int' },
-            { id: 'combat', label: '⚔️ SỨC MẠNH/TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier'], type: 'float' },
-            { id: 'vip', label: '🛒 ĐẶC QUYỀN (BOOL)', keys: ['vip', 'premium', 'unlocked', 'purchased'], type: 'bool' },
+            { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'life', 'mp', 'mana'], type: 'int' },
+            { id: 'combat', label: '⚔️ SỨC MẠNH & TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received'], type: 'float' },
+            { id: 'vip', label: '🛒 ĐẶC QUYỀN VIP (BOOL)', keys: ['vip', 'premium', 'unlocked', 'ispurchased'], type: 'bool' },
             { id: 'action', label: '🚫 HÀNH ĐỘNG (VOID)', keys: ['takedamage', 'spend', 'use'], type: 'void' },
-            { id: 'safety', label: '🛡️ ANTIBAN (GỬI TẤT CẢ)', keys: ['banned', 'detect', 'check'], type: 'bool', single: false }
+            { id: 'safety', label: '🛡️ ANTIBAN (BOOL)', keys: ['banned', 'detect', 'check'], type: 'bool', single: false }
         ];
 
         dropZone.onclick = () => { let i=document.createElement('input'); i.type='file'; i.onchange=e=>handleFile(e.target.files[0]); i.click(); };
@@ -92,7 +118,7 @@
             }
 
             let results = {};
-            sniperConfig.forEach(group => {
+            config.forEach(group => {
                 let candidates = raw.filter(m => {
                     const tL = m.type.toLowerCase();
                     const nameOk = group.keys.some(k => m.nameL.includes(k));
@@ -108,8 +134,8 @@
                     else {
                         let unique = [];
                         group.keys.forEach(k => {
-                            let best = candidates.find(c => c.nameL === 'get_' + k) || candidates.find(c => c.nameL.includes(k));
-                            if (best && !unique.some(u => u.rva === best.rva)) unique.push(best);
+                            let best = candidates.find(c => c.nameL === 'get_' + k || c.nameL === 'is' + k) || candidates.find(c => c.nameL.includes(k));
+                            if (best && !unique.some(u => u.nameL === best.nameL)) unique.push(best);
                         });
                         results[group.id] = unique;
                     }
@@ -120,7 +146,7 @@
 
         function render(data) {
             resultsArea.innerHTML = '';
-            sniperConfig.forEach(group => {
+            config.forEach(group => {
                 const items = data[group.id];
                 if (!items) return;
                 resultsArea.insertAdjacentHTML('beforeend', `
@@ -129,19 +155,23 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             ${items.map(item => {
                                 const options = hexLibrary[group.type] || hexLibrary.void;
+                                const description = getDetailedAnalysis(item.name, item.type);
                                 return `
                                 <div class="card p-6 shadow-2xl">
                                     <span class="type-tag ${group.type}">${item.type}</span>
-                                    <div class="mb-4 text-[13px] font-black text-white italic uppercase break-all leading-tight">${item.name}()</div>
-                                    <div class="analysis-box">🎯 <b>Dữ liệu:</b> ${group.type.toUpperCase()}<br>💡 <b>Chọn giá trị muốn Patch:</b></div>
-                                    <select id="sel-${item.rva}" class="hex-select">
-                                        ${options.map(o => `<option value="${o.hex}">${o.val}</option>`).join('')}
-                                    </select>
-                                    <div class="my-4 text-center">
-                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2">Address Filza:</div>
-                                        <span class="rva-val cursor-pointer" onclick="navigator.clipboard.writeText('${item.rva}'); alert('Copied RVA!')">${item.rva}</span>
+                                    <div class="mb-2 text-[13px] font-black text-white italic uppercase break-all leading-tight">${item.name}()</div>
+                                    <div class="analysis-box">🎯 <b>Công dụng:</b><br>${description}</div>
+                                    <div class="mb-4">
+                                        <div class="text-[9px] text-slate-600 font-bold mb-2 uppercase">Chọn giá trị để lấy mã Hex:</div>
+                                        <select id="sel-${item.rva}" class="hex-select">
+                                            ${options.map(o => `<option value="${o.hex}">${o.val}</option>`).join('')}
+                                        </select>
                                     </div>
-                                    <button onclick="const h = document.getElementById('sel-${item.rva}').value; navigator.clipboard.writeText(h); alert('Copied Hex: ' + h)" class="hex-btn active:scale-95">Copy Mã Hex Đã Chọn</button>
+                                    <div class="mb-6 text-center">
+                                        <div class="text-[9px] text-slate-600 font-bold uppercase mb-2 italic">Địa chỉ (Bấm để copy không lấy 0x):</div>
+                                        <span class="rva-val" onclick="const r = '${item.rva}'.replace('0x',''); navigator.clipboard.writeText(r); alert('Đã copy: ' + r)">${item.rva}</span>
+                                    </div>
+                                    <button onclick="const h = document.getElementById('sel-${item.rva}').value; navigator.clipboard.writeText(h); alert('Đã copy mã Hex!')" class="hex-btn">Copy Mã Hex Dứt Điểm</button>
                                 </div>`;
                             }).join('')}
                         </div>

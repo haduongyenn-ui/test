@@ -276,8 +276,8 @@
         const config = [
             { id: 'money', label: '💰 NHÓM TÀI NGUYÊN (INT)', keys: ['gold', 'coin', 'diamond', 'gem', 'money'], type: 'int' },
             { id: 'stats', label: '❤️ NHÓM SINH TỒN (INT)', keys: ['hp', 'health', 'life', 'mp', 'mana', 'energy'], type: 'int' },
-            { id: 'combat', label: '⚔️ CHIẾN ĐẤU / TỐC ĐỘ (FLOAT)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received', 'move'], type: 'float' },
-            { id: 'cooldown', label: '⏱️ HỒI CHIÊU / DELAY (FLOAT)', keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'], type: 'float', single: false },
+            { id: 'combat', label: '⚔️ CHIẾN ĐẤU / TỐC ĐỘ (FLOAT ONLY)', keys: ['damage', 'attack', 'speed', 'multiplier', 'received', 'move'], type: 'float' },
+            { id: 'cooldown', label: '⏱️ HỒI CHIÊU / DELAY (FLOAT ONLY)', keys: ['cooldown', 'cd', 'delay', 'interval', 'reuse', 'reusetime', 'casttime', 'waittime'], type: 'float', single: false },
             { id: 'ads', label: '📺 NHÓM ADS / QUẢNG CÁO (BOOL)', keys: ['ads', 'ad', 'advertise', 'advertisement', 'rewarded', 'interstitial', 'banner', 'videoad'], type: 'bool', single: false },
             { id: 'vip', label: '🛒 MỞ KHÓA / ĐẶC QUYỀN (BOOL)', keys: ['vip', 'premium', 'unlocked', 'ispurchased', 'owned'], type: 'bool' },
             { id: 'action', label: '🚫 HÀNH ĐỘNG / XỬ LÝ (VOID)', keys: ['takedamage', 'spend', 'use', 'consume', 'cost'], type: 'void' },
@@ -315,7 +315,7 @@
         function typeLabel(type) {
             const t = String(type || '').toLowerCase();
             if (t === 'int' || t === 'int32') return 'số nguyên';
-            if (t === 'float' || t === 'single') return 'số thực';
+            if (t === 'float') return 'số thực';
             if (t === 'bool' || t === 'boolean') return 'đúng / sai';
             if (t === 'void') return 'không trả về giá trị';
             return String(type || 'không rõ');
@@ -625,7 +625,7 @@
                     const typeOk =
                         (group.type === 'int' && (tL === 'int32' || tL === 'int')) ||
                         (group.type === 'bool' && (tL === 'bool' || tL === 'boolean')) ||
-                        (group.type === 'float' && (tL === 'single' || tL === 'float')) ||
+                        (group.type === 'float' && tL === 'float') ||
                         (group.type === 'void' && tL === 'void');
 
                     return nameOk && typeOk;

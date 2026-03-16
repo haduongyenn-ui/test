@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analyzer v51 System - Visual Patcher</title>
+    <title>Analyzer v52 Ultimate - Visual Patcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -99,7 +99,7 @@
             margin: 14px 0;
             border-radius: 12px;
             font-size: 12px;
-            line-height: 1.55;
+            line-height: 1.6;
             color: #ecfeff;
         }
         .analysis-head {
@@ -119,6 +119,12 @@
         }
         .analysis-mini div { color: #dbeafe; }
         .analysis-mini b { color: #ffffff; }
+        .analysis-keyline {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(255,255,255,0.15);
+            color: #c7f9cc;
+        }
         .hex-select {
             background: #1e293b;
             color: #10b981;
@@ -234,10 +240,10 @@
     <div class="max-w-[1600px] mx-auto text-center">
         <header class="mb-7">
             <h1 class="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">
-                VISUAL PATCHER <span class="text-emerald-500">v51 SYSTEM</span>
+                VISUAL PATCHER <span class="text-emerald-500">v52 ULTIMATE</span>
             </h1>
             <p class="text-slate-500 font-bold text-[11px] mt-3 uppercase tracking-[0.35em]">
-                15+ Nhóm • Full Key • Toggle • Auto Ưu Tiên Theo Loại Game
+                15+ Nhóm • Full Key Mở Rộng • Toggle • Phân Tích Nhanh Chi Tiết
             </p>
         </header>
 
@@ -318,10 +324,10 @@
         };
 
         const config = [
-            { id:'currency', label:'💰 Currency', type:'int', keys:['currency','resource','gold','coin','money','cash','credit','token','point','points','wallet','balance','diamond','gem','ruby','emerald','crystal','ticket','voucher','coupon','medal'], genres:['idle','rpg','gacha','card','sim'] },
+            { id:'currency', label:'💰 Currency / Tài nguyên', type:'int', keys:['currency','resource','gold','coin','money','cash','credit','token','point','points','wallet','balance','diamond','gem','ruby','emerald','crystal','crystals','premiumcurrency','hardcurrency','softcurrency','star','stars','ticket','voucher','coupon','medal'], genres:['idle','rpg','gacha','card','sim'] },
             { id:'stats', label:'❤️ HP / MP / Energy', type:'int', keys:['hp','health','life','maxhp','maxhealth','mp','mana','energy','stamina','rage','shield','armor'], genres:['rpg','moba','shooter','survival'] },
-            { id:'combat', label:'⚔️ Combat', type:'float', keys:['damage','attack','atk','power','hit','critical','crit','critdamage','critrate','penetration','pierce'], genres:['rpg','moba','shooter','survival'] },
-            { id:'speed', label:'🏃 Speed / Movement', type:'float', keys:['speed','movespeed','runspeed','walkspeed','attackspeed','velocity'], genres:['runner','rpg','shooter','moba'] },
+            { id:'combat', label:'⚔️ Combat / Power', type:'float', keys:['damage','attack','atk','power','boostpower','powerboost','hit','critical','crit','critdamage','critrate','penetration','pierce'], genres:['rpg','moba','shooter','survival'] },
+            { id:'speed', label:'🏃 Speed / Movement', type:'float', keys:['speed','movespeed','runspeed','walkspeed','attackspeed','velocity','boostpower','boost','speedboost'], genres:['runner','rpg','shooter','moba'] },
             { id:'cooldown', label:'⏱️ Cooldown / Delay', type:'float', keys:['cooldown','cd','delay','interval','reuse','reusetime','skillcooldown','attackcooldown','abilitycooldown','casttime','waittime','reload','reloadtime'], genres:['rpg','moba','shooter'] },
             { id:'inventory', label:'🎒 Inventory / Item', type:'int', keys:['item','inventory','bag','slot','equipment','equip','gear','material','fragment','shard'], genres:['rpg','survival','gacha'] },
             { id:'shop', label:'🛍️ Shop / Purchase', type:'int', keys:['shop','purchase','buy','sell','price','cost','bundle','pack','offer'], genres:['idle','gacha','sim'] },
@@ -330,25 +336,156 @@
             { id:'level', label:'📈 Level / EXP', type:'int', keys:['level','exp','xp','experience','rank','tier'], genres:['rpg','card','sim'] },
             { id:'player', label:'🧍 Player / Character', type:'int', keys:['player','character','hero','unit','avatar'], genres:['rpg','moba','card'] },
             { id:'enemy', label:'🐉 Enemy / Monster', type:'int', keys:['enemy','monster','boss','mob','creep'], genres:['rpg','moba','survival'] },
-            { id:'defense', label:'🛡️ Defense / Taken', type:'float', keys:['defense','def','armor','resistance','takendamage','received','reduction','block'], genres:['rpg','shooter','survival'] },
-            { id:'status', label:'🧪 Buff / Debuff', type:'bool', keys:['buff','debuff','effect','status','state','poison','stun','freeze'], genres:['rpg','moba'] },
+            { id:'defense', label:'🛡️ Defense / Taken', type:'float', keys:['defense','def','armor','resistance','takendamage','received','reduction','block','canbeattacked','canattack','canhit','cantake','cantakedamage','invincible','godmode'], genres:['rpg','shooter','survival'] },
+            { id:'status', label:'🧪 Buff / Debuff / Effect', type:'bool', keys:['buff','debuff','effect','status','state','poison','ice','freeze','burn','fire','onpoisontouch','onicetouch','oneffect','onhit','ontrigger'], genres:['rpg','moba'] },
             { id:'vip', label:'👑 VIP / Unlock', type:'bool', keys:['vip','premium','pro','unlock','unlocked','ispurchased','purchased','owned','hasitem','isowned','isvip','ispro'], genres:['idle','gacha','sim'] },
             { id:'mission', label:'📜 Quest / Mission', type:'int', keys:['quest','mission','stage','chapter','levelid','dungeon','raid','tower','campaign'], genres:['rpg','gacha'] },
             { id:'social', label:'🏟️ Guild / Arena / PVP', type:'int', keys:['guild','clan','arena','pvp','league','season'], genres:['moba','rpg','card'] },
+            { id:'ads', label:'📺 Ads / Quảng cáo', type:'bool', keys:['ads','ad','areadsallowed','adsallowed','showads','rewarded','interstitial','banner','videoad'], genres:['idle','gacha','sim'] },
+            { id:'event', label:'🎮 Event / Update', type:'void', keys:['update','tick','loop','updategoldrush','updateevent','refresh'], genres:['idle','rpg','sim'] },
             { id:'action', label:'🚫 Action', type:'void', keys:['takedamage','hurt','spend','use','consume','pay','deduct','add','remove','give'], genres:['rpg','shooter','survival','idle'] },
             { id:'safety', label:'🔐 Check / Verify', type:'bool', keys:['banned','ban','isbanned','detect','detected','check','verify','validation','security','anticheat','cheat','isvalid','valid'], genres:['rpg','moba','shooter','idle','gacha','card','sim','survival'] }
         ];
 
+        const groupDescriptions = {
+            currency: {
+                title: 'Tiền tệ / tài nguyên',
+                what: 'Nhóm này thường đại diện cho toàn bộ tiền, gem, vé, token hoặc tài nguyên dùng để mua, nâng cấp, mở khóa hoặc quay thưởng.',
+                use: 'Nếu tên hàm nằm trong nhóm này thì nó thường được dùng để đọc số dư hiện tại hoặc số lượng tài nguyên mà người chơi đang có.',
+                note: 'Các key như gold, coin, money, cash là tiền thường; diamond, gem, crystal, premiumcurrency là tiền cao cấp; ticket, voucher, coupon là vé hoặc phiếu.'
+            },
+            stats: {
+                title: 'HP / MP / năng lượng',
+                what: 'Nhóm này là các chỉ số sinh tồn hoặc chỉ số tiêu hao khi chiến đấu.',
+                use: 'Nó thường dùng để hiển thị máu, mana, stamina, shield hoặc giới hạn sống còn của nhân vật.',
+                note: 'hp/health/life thường liên quan máu; mp/mana/energy/stamina liên quan năng lượng; shield/armor thiên về giáp.'
+            },
+            combat: {
+                title: 'Sức mạnh / sát thương',
+                what: 'Nhóm này là các chỉ số ảnh hưởng trực tiếp tới lực đánh hoặc hiệu quả gây sát thương.',
+                use: 'Nó thường tham gia vào công thức tính đòn đánh, sát thương kỹ năng, crit hoặc buff power.',
+                note: 'damage/attack/atk là lực đánh cơ bản; crit/critrate/critdamage là chí mạng; boostpower/powerboost thường là tăng sức mạnh tạm thời.'
+            },
+            speed: {
+                title: 'Tốc độ / di chuyển',
+                what: 'Nhóm này đại diện cho tốc độ chạy, tốc độ đi, tốc độ tấn công hoặc tốc độ hành động.',
+                use: 'Nó thường ảnh hưởng cảm giác game nhanh chậm, phản hồi di chuyển hoặc tốc độ đánh.',
+                note: 'speed là chung; movespeed/runspeed/walkspeed là tốc độ chạy/đi; velocity thiên về vận tốc; speedboost là tăng tốc.'
+            },
+            cooldown: {
+                title: 'Hồi chiêu / thời gian chờ',
+                what: 'Nhóm này là thời gian chờ giữa các hành động, kỹ năng hoặc lần bắn tiếp theo.',
+                use: 'Nó thường dùng để điều khiển khoảng chờ dùng skill, reload đạn hoặc cast time.',
+                note: 'cooldown/cd là hồi chiêu; delay/interval là khoảng chờ; reload/reloadtime là nạp lại; casttime là thời gian tung chiêu.'
+            },
+            inventory: {
+                title: 'Túi đồ / vật phẩm',
+                what: 'Nhóm này liên quan tới hệ thống item, kho đồ, slot và trang bị.',
+                use: 'Nó thường dùng để đọc số slot, số item, số material hoặc dữ liệu liên quan túi đồ.',
+                note: 'inventory/bag là túi; slot là ô; equipment/equip/gear là trang bị; material/shard/fragment là nguyên liệu hoặc mảnh.'
+            },
+            shop: {
+                title: 'Shop / mua bán',
+                what: 'Nhóm này là phần giá, mua, bán, gói vật phẩm và ưu đãi.',
+                use: 'Nó thường liên quan tới số tiền cần trả hoặc giá trị gói mua trong game.',
+                note: 'buy/sell/purchase là mua bán; price/cost là giá; bundle/pack/offer là gói hoặc ưu đãi.'
+            },
+            reward: {
+                title: 'Thưởng / rơi đồ',
+                what: 'Nhóm này là logic trao thưởng, rơi vật phẩm hoặc nhận quà.',
+                use: 'Nó thường chạy khi hoàn thành nhiệm vụ, đánh rơi loot hoặc nhận phần thưởng.',
+                note: 'reward/bonus/gift là thưởng; drop/loot là rơi đồ; claim là nhận thưởng.'
+            },
+            skill: {
+                title: 'Kỹ năng / ability',
+                what: 'Nhóm này là logic hoặc thông số liên quan kỹ năng và khả năng đặc biệt.',
+                use: 'Nó thường liên quan tới lực kỹ năng, hệ số kỹ năng hoặc hành vi passive/ultimate.',
+                note: 'skill/ability/spell là kỹ năng; passive là bị động; ultimate là chiêu cuối.'
+            },
+            level: {
+                title: 'Cấp độ / kinh nghiệm',
+                what: 'Nhóm này là phần level, exp, xp, rank hoặc tier.',
+                use: 'Nó thường dùng để đọc cấp hiện tại, kinh nghiệm cần hoặc thứ hạng.',
+                note: 'level là cấp; exp/xp/experience là kinh nghiệm; rank/tier là bậc hoặc hạng.'
+            },
+            player: {
+                title: 'Người chơi / nhân vật',
+                what: 'Nhóm này đại diện cho thực thể chính mà người chơi điều khiển.',
+                use: 'Nó thường liên quan tới dữ liệu tổng của hero, character, avatar hoặc unit.',
+                note: 'player là người chơi; character/hero/avatar là nhân vật; unit thường là đơn vị trong game chiến thuật.'
+            },
+            enemy: {
+                title: 'Quái / boss / kẻ địch',
+                what: 'Nhóm này dùng cho thực thể đối phương.',
+                use: 'Nó thường liên quan số lượng quái, boss, creep hoặc dữ liệu địch.',
+                note: 'enemy/monster/mob là quái; boss là boss; creep hay gặp trong MOBA.'
+            },
+            defense: {
+                title: 'Phòng thủ / nhận sát thương',
+                what: 'Nhóm này là các key liên quan tới thủ, giảm sát thương hoặc trạng thái bị đánh.',
+                use: 'Nó thường quyết định nhân vật có bị đánh được không, nhận bao nhiêu damage hoặc có giảm damage hay không.',
+                note: 'defense/armor/resistance là thủ; takendamage/received là sát thương nhận vào; canbeattacked là có thể bị đánh hay không; invincible/godmode là trạng thái không bị ảnh hưởng.'
+            },
+            status: {
+                title: 'Buff / debuff / hiệu ứng',
+                what: 'Nhóm này là các trạng thái đặc biệt hoặc hiệu ứng chạm.',
+                use: 'Nó thường dùng để xử lý độc, băng, cháy, choáng hoặc các effect khi chạm/trúng.',
+                note: 'poison là độc; ice/freeze là đóng băng; burn/fire là cháy; onpoisontouch/onicetouch là event xử lý khi chạm hiệu ứng.'
+            },
+            vip: {
+                title: 'VIP / mở khóa / đã mua',
+                what: 'Nhóm này kiểm tra quyền sở hữu, quyền premium hoặc trạng thái mở khóa.',
+                use: 'Nó thường trả về đúng/sai để biết món đó đã mở, đã mua hoặc đã sở hữu chưa.',
+                note: 'vip/premium/pro là cao cấp; unlock/unlocked là mở khóa; purchased/owned là đã mua hoặc đã sở hữu.'
+            },
+            mission: {
+                title: 'Nhiệm vụ / màn / chiến dịch',
+                what: 'Nhóm này là tiến trình chơi như quest, mission, stage, chapter.',
+                use: 'Nó thường dùng để đọc màn chơi hiện tại, chapter, dungeon hoặc raid.',
+                note: 'quest/mission là nhiệm vụ; stage/chapter/levelid là màn; dungeon/raid/tower/campaign là mode tiến trình.'
+            },
+            social: {
+                title: 'PVP / guild / arena',
+                what: 'Nhóm này là các hệ thống cạnh tranh hoặc xã hội trong game.',
+                use: 'Nó thường liên quan guild, clan, đấu trường, mùa giải hoặc xếp hạng PVP.',
+                note: 'guild/clan là bang hội; arena/pvp là đấu; league/season là mùa giải.'
+            },
+            ads: {
+                title: 'Quảng cáo',
+                what: 'Nhóm này là các trạng thái có cho phép quảng cáo, quảng cáo sẵn sàng hay dạng ads nào đang dùng.',
+                use: 'Nó thường trả về đúng/sai để xác định có hiển thị ads, rewarded ads hay interstitial hay không.',
+                note: 'areadsallowed/adsallowed là có cho quảng cáo; rewarded là ads thưởng; banner/interstitial/videoad là loại quảng cáo.'
+            },
+            event: {
+                title: 'Event / update / vòng lặp',
+                what: 'Nhóm này là các hàm cập nhật hoặc làm mới logic theo thời gian.',
+                use: 'Nó thường chạy liên tục, chạy theo tick hoặc cập nhật sự kiện đặc biệt.',
+                note: 'update/tick/loop là cập nhật chung; updategoldrush/updateevent là cập nhật sự kiện cụ thể; refresh là làm mới.'
+            },
+            action: {
+                title: 'Hành động thực thi',
+                what: 'Nhóm này là các hàm thực hiện hành động thay vì chỉ đọc dữ liệu.',
+                use: 'Nó thường trừ tài nguyên, thêm vật phẩm, gây đau, dùng item hoặc thay đổi trạng thái thực tế trong game.',
+                note: 'use/consume/spend/pay/deduct là tiêu hao; add/remove/give là thêm bớt; takedamage/hurt là nhận sát thương.'
+            },
+            safety: {
+                title: 'Check / verify / bảo vệ',
+                what: 'Nhóm này là các hàm xác minh, kiểm tra điều kiện hoặc cờ kiểm tra nội bộ.',
+                use: 'Nó thường kiểm tra trạng thái hợp lệ, bị cấm hay có dấu hiệu vi phạm hay không.',
+                note: 'banned/ban là cấm; detect/check/verify là kiểm tra; anticheat/cheat là chống gian lận; isvalid/valid là hợp lệ.'
+            }
+        };
+
         const genreProfiles = [
             { id:'shooter', label:'Shooter / bắn súng', keys:['ammo','bullet','reload','reloadtime','weapon','gun','fire','shoot','crosshair','recoil','magazine'], preferredGroups:['combat','speed','cooldown','stats','action','defense'] },
-            { id:'rpg', label:'RPG / nhập vai', keys:['skill','spell','mana','hp','health','damage','quest','level','exp','boss','inventory','dungeon'], preferredGroups:['stats','combat','cooldown','currency','skill','inventory','mission','defense'] },
-            { id:'moba', label:'MOBA / skill combat', keys:['hero','skill','cooldown','mana','ability','tower','creep','lane','arena'], preferredGroups:['cooldown','combat','stats','skill','social'] },
-            { id:'idle', label:'Idle / clicker / afk', keys:['idle','offline','reward','income','profit','earn','coin','cash','vip'], preferredGroups:['currency','vip','reward','shop'] },
-            { id:'gacha', label:'Gacha / summon', keys:['summon','gacha','draw','pull','banner','ticket','shard','star','rarity'], preferredGroups:['currency','vip','inventory','mission','shop'] },
+            { id:'rpg', label:'RPG / nhập vai', keys:['skill','spell','mana','hp','health','damage','quest','level','exp','boss','inventory','dungeon'], preferredGroups:['stats','combat','cooldown','currency','skill','inventory','mission','defense','status'] },
+            { id:'moba', label:'MOBA / skill combat', keys:['hero','skill','cooldown','mana','ability','tower','creep','lane','arena'], preferredGroups:['cooldown','combat','stats','skill','social','status'] },
+            { id:'idle', label:'Idle / clicker / afk', keys:['idle','offline','reward','income','profit','earn','coin','cash','vip'], preferredGroups:['currency','vip','reward','shop','ads','event'] },
+            { id:'gacha', label:'Gacha / summon', keys:['summon','gacha','draw','pull','banner','ticket','shard','star','rarity'], preferredGroups:['currency','vip','inventory','mission','shop','reward','ads'] },
             { id:'card', label:'Card / strategy', keys:['card','deck','energy','mana','cost','turn','draw','rarity'], preferredGroups:['currency','stats','vip','social','level'] },
-            { id:'survival', label:'Survival / sandbox', keys:['hunger','thirst','stamina','health','craft','survive','armor','damage'], preferredGroups:['stats','combat','action','inventory','defense'] },
+            { id:'survival', label:'Survival / sandbox', keys:['hunger','thirst','stamina','health','craft','survive','armor','damage'], preferredGroups:['stats','combat','action','inventory','defense','status'] },
             { id:'runner', label:'Runner / endless', keys:['run','runner','speed','jump','distance','coin','score'], preferredGroups:['speed','currency','level'] },
-            { id:'sim', label:'Simulation / casual', keys:['build','decorate','farm','shop','upgrade','customer','profit'], preferredGroups:['currency','shop','vip','level'] }
+            { id:'sim', label:'Simulation / casual', keys:['build','decorate','farm','shop','upgrade','customer','profit'], preferredGroups:['currency','shop','vip','level','ads','event'] }
         ];
 
         function showToast(msg) {
@@ -371,10 +508,7 @@
                 .replaceAll("'", '&#039;');
         }
 
-        function safeId(value) {
-            return String(value).replace(/[^a-zA-Z0-9_-]/g, '_');
-        }
-
+        function safeId(value) { return String(value).replace(/[^a-zA-Z0-9_-]/g, '_'); }
         function chunkHex(hex) { return String(hex || '').match(/.{1,8}/g) || []; }
 
         function typeLabel(type) {
@@ -403,7 +537,7 @@
         function normalizeName(name) {
             return String(name || '')
                 .toLowerCase()
-                .replace(/^(get_|set_|is_|has_|can_|get|set|is|has|can)/, '')
+                .replace(/^(get_|set_|is_|has_|can_|on_|update_|get|set|is|has|can|on|update)/, '')
                 .replace(/_/g, '')
                 .replace(/(value|data|info|state)$/g, '');
         }
@@ -418,9 +552,11 @@
             if (n === 'is_' + k || n === 'is' + k) return 280;
             if (n === 'has_' + k || n === 'has' + k) return 260;
             if (n === 'can_' + k || n === 'can' + k) return 250;
+            if (n === 'on_' + k || n === 'on' + k) return 240;
+            if (n === 'update_' + k || n === 'update' + k) return 235;
 
             if ((n.startsWith('get_') || n.startsWith('get')) && words.includes(k)) return 220;
-            if ((n.startsWith('is_') || n.startsWith('is') || n.startsWith('has_') || n.startsWith('has') || n.startsWith('can_') || n.startsWith('can')) && words.includes(k)) return 200;
+            if ((n.startsWith('is_') || n.startsWith('is') || n.startsWith('has_') || n.startsWith('has') || n.startsWith('can_') || n.startsWith('can') || n.startsWith('on_') || n.startsWith('on') || n.startsWith('update_') || n.startsWith('update')) && words.includes(k)) return 200;
 
             if (words.includes(k)) return 120;
             return 0;
@@ -448,8 +584,15 @@
         function scoreMethod(method, group, profile) {
             const name = (method.name || '').toLowerCase();
             let bestKeyScore = 0;
-            for (const key of group.keys) bestKeyScore = Math.max(bestKeyScore, matchKeyScore(name, key));
-            if (bestKeyScore <= 0) return 0;
+            let bestKey = '';
+            for (const key of group.keys) {
+                const s = matchKeyScore(name, key);
+                if (s > bestKeyScore) {
+                    bestKeyScore = s;
+                    bestKey = key;
+                }
+            }
+            if (bestKeyScore <= 0) return { score: 0, key: '' };
 
             let score = bestKeyScore;
             if (method.args === '') score += 18;
@@ -459,7 +602,7 @@
             if (name.length > 32) score -= 8;
             if (name.includes('tmp') || name.includes('test') || name.includes('debug')) score -= 14;
             if (isSetter(name)) score -= 1000;
-            return score;
+            return { score, key: bestKey };
         }
 
         function dedupeRanked(ranked) {
@@ -476,7 +619,10 @@
 
         function rankCandidates(candidates, group, profile) {
             const ranked = candidates
-                .map(item => ({ ...item, rankScore: scoreMethod(item, group, profile) }))
+                .map(item => {
+                    const result = scoreMethod(item, group, profile);
+                    return { ...item, rankScore: result.score, matchedKey: result.key };
+                })
                 .filter(item => item.rankScore > 0)
                 .sort((a, b) => b.rankScore - a.rankScore || a.name.localeCompare(b.name));
             const deduped = dedupeRanked(ranked);
@@ -499,7 +645,7 @@
                         <div><b>Độ tin cậy:</b> ${profile.confidence}%</div>
                         <div><b>Ưu tiên nhóm:</b> ${preferred || '<span class="pill">Không rõ</span>'}</div>
                         <div><b>Tín hiệu tìm thấy:</b> ${topScores || '<span class="pill">Không đủ dữ liệu</span>'}</div>
-                        <div><b>Cách lọc:</b> Tool match đúng theo <b>key</b>, ưu tiên <b>get_</b>, bỏ <b>set_</b>, tự <b>rank</b>, tự bỏ bớt hàm trùng, và tự ưu tiên nhóm hợp với thể loại game đoán được.</div>
+                        <div><b>Cách lọc:</b> Tool match đúng theo <b>key</b>, ưu tiên <b>get_ / is_ / has_ / can_ / on_ / update_</b>, bỏ <b>set_</b>, tự <b>rank</b>, tự bỏ bớt hàm trùng và ưu tiên nhóm hợp với thể loại game đoán được.</div>
                     </div>
                 </div>
             `;
@@ -539,105 +685,25 @@
             `;
         }
 
-        
-        function getGroupSummary(name, type, item) {
-            const n = (name || '').toLowerCase();
+        function getGroupSummary(group, item) {
+            const desc = groupDescriptions[group.id] || {
+                title: group.label,
+                what: 'Nhóm này dùng để gom các hàm có cùng mục đích.',
+                use: 'Tool sẽ chọn hàm phù hợp nhất dựa trên key match và rank.',
+                note: 'Đây là mô tả tổng quát.'
+            };
 
-            const explain = (title, what, use, note) => `
-                <div class="analysis-head">🎯 Phân tích nhanh · ${title}</div>
-                <div class="analysis-mini">
-                    <div><b>Là gì:</b> ${what}</div>
-                    <div><b>Dùng làm gì:</b> ${use}</div>
-                    <div><b>Lưu ý:</b> ${note} (Rank #${item.rankIndex}, score ${item.rankScore})</div>
-                </div>
-            `;
-
-            if (/(gold|coin|money|cash|currency|gem|diamond|token)/.test(n)) {
-                return explain(
-                    "Currency",
-                    "Biến hoặc hàm liên quan đến tiền tệ / tài nguyên trong game.",
-                    "Dùng để hiển thị số tiền, cộng tiền, hoặc kiểm tra tài nguyên.",
-                    "Ưu tiên get_XXX. Nếu là PremiumCurrency thường là kim cương."
-                );
-            }
-
-            if (/(hp|health|mana|mp|energy|stamina)/.test(n)) {
-                return explain(
-                    "Stats",
-                    "Chỉ số sinh tồn như máu, mana hoặc năng lượng.",
-                    "Dùng trong chiến đấu để tính sống/chết hoặc dùng skill.",
-                    "Patch có thể gây bất tử hoặc không hao mana."
-                );
-            }
-
-            if (/(damage|attack|atk|power|crit)/.test(n)) {
-                return explain(
-                    "Combat",
-                    "Liên quan đến sát thương hoặc sức mạnh tấn công.",
-                    "Dùng để tính damage khi đánh.",
-                    "Tăng quá cao có thể gây lỗi hoặc crash."
-                );
-            }
-
-            if (/(speed|movespeed|runspeed|boost)/.test(n)) {
-                return explain(
-                    "Speed",
-                    "Liên quan đến tốc độ di chuyển hoặc tốc độ hành động.",
-                    "Dùng để điều khiển tốc độ nhân vật.",
-                    "Nên tìm get_Speed để ổn định hơn."
-                );
-            }
-
-            if (/(cooldown|cd|delay|reload)/.test(n)) {
-                return explain(
-                    "Cooldown",
-                    "Thời gian chờ giữa các hành động hoặc kỹ năng.",
-                    "Dùng để giới hạn spam skill.",
-                    "Set về 0 sẽ giúp spam skill liên tục."
-                );
-            }
-
-            if (/(poison|ice|freeze|burn|on.*touch)/.test(n)) {
-                return explain(
-                    "Effect",
-                    "Hàm xử lý hiệu ứng như độc, băng, lửa.",
-                    "Dùng khi nhân vật bị tác động bởi hiệu ứng.",
-                    "Patch RET sẽ vô hiệu hóa hiệu ứng."
-                );
-            }
-
-            if (/(can|is|has).*(attack|damage|hit)/.test(n)) {
-                return explain(
-                    "Defense / Control",
-                    "Hàm kiểm tra có bị đánh hay không.",
-                    "Dùng để xác định trạng thái bị tấn công.",
-                    "Set false có thể giúp bất tử."
-                );
-            }
-
-            if (/(ads|ad)/.test(n)) {
-                return explain(
-                    "Ads",
-                    "Hàm liên quan đến quảng cáo.",
-                    "Dùng để kiểm tra hoặc hiển thị quảng cáo.",
-                    "Set false để tắt ads."
-                );
-            }
-
-            return explain(
-                "Unknown",
-                "Hàm chưa xác định rõ chức năng.",
-                "Có thể là logic phụ trong game.",
-                "Cần kiểm tra thêm tên và context."
-            );
-        }
+            const matchedKeyText = item.matchedKey
+                ? `<div class="analysis-keyline"><b>Key khớp mạnh nhất:</b> <b>${escapeHtml(item.matchedKey)}</b> — đây là từ khóa khiến hàm này được xếp vào nhóm <b>${escapeHtml(desc.title)}</b>.</div>`
+                : '';
 
             return `
                 <div class="analysis-head">🎯 Phân tích nhanh</div>
                 <div class="analysis-mini">
-                    <div><b>Kiểu:</b> ${escapeHtml(typeLabel(type))}</div>
-                    <div><b>Rank:</b> #${item.rankIndex} / score ${item.rankScore}</div>
-                    <div><b>Lưu ý:</b> Hàm này được chọn vì match đúng key của nhóm và được ưu tiên theo loại game hiện tại.</div>
+                    <div><b>Là gì:</b> ${desc.what}</div>
+                    <div><b>Dùng làm gì:</b> ${desc.use}</div>
+                    <div><b>Lưu ý:</b> ${desc.note} Kiểu trả về hiện tại là <b>${escapeHtml(typeLabel(item.type))}</b>. Hàm này đang có <b>rank #${item.rankIndex}</b> với <b>score ${item.rankScore}</b>.</div>
+                    ${matchedKeyText}
                 </div>
             `;
         }
@@ -655,7 +721,7 @@
         function exportJson() {
             if (!lastMatchedMethods.length) { showToast('Chưa có dữ liệu để export'); return; }
             const payload = {
-                version: '51 SYSTEM',
+                version: '52 ULTIMATE',
                 gameProfile: lastProfile,
                 enabledGroups: [...currentEnabledGroups],
                 topLimit: currentTopLimit,
@@ -669,7 +735,7 @@
 
         function exportMarkdown() {
             if (!lastMatchedMethods.length) { showToast('Chưa có dữ liệu để export'); return; }
-            let md = '# Visual Patcher v51 SYSTEM Report\n\n';
+            let md = '# Visual Patcher v52 ULTIMATE Report\n\n';
             if (lastProfile) {
                 md += `- Game Profile: ${lastProfile.primaryLabel}\n`;
                 md += `- Confidence: ${lastProfile.confidence}%\n`;
@@ -683,21 +749,17 @@
                 if (!currentEnabledGroups.has(group.id)) continue;
                 const items = lastRenderedData[group.id];
                 if (!items || !items.length) continue;
-
                 md += `## ${group.label}\n\n`;
-                for (const item of items) {
+                for (const item of items.slice(0, currentTopLimit)) {
                     md += `- **${item.name}()**\n`;
                     md += `  - RVA: ${item.rva}\n`;
                     md += `  - Type: ${item.type}\n`;
-                    md += `  - Access: ${item.access || 'public'}\n`;
-                    md += `  - Static: ${item.isStatic ? 'Yes' : 'No'}\n`;
                     md += `  - Rank Score: ${item.rankScore}\n`;
                     md += `  - Rank: #${item.rankIndex}\n`;
-                    md += `  - Best: ${item.isBest ? 'Yes' : 'No'}\n`;
+                    md += `  - Matched Key: ${item.matchedKey || '(none)'}\n`;
                 }
                 md += '\n';
             }
-
             downloadTextFile('visual-patcher-results.md', md, 'text/markdown;charset=utf-8');
             showToast('Đã export MD');
         }
@@ -767,12 +829,13 @@
                 return;
             }
             const filteredData = {};
+            const q = searchBox.value.trim().toLowerCase();
             for (const group of config) {
                 if (!currentEnabledGroups.has(group.id)) continue;
                 const items = lastRenderedData[group.id];
                 if (items?.length) filteredData[group.id] = items.slice(0, currentTopLimit);
             }
-            render(filteredData, lastRawMethods.length, searchBox.value.trim().toLowerCase());
+            render(filteredData, lastRawMethods.length, q);
         }
 
         dropZone.onclick = () => {
@@ -887,10 +950,11 @@
 
             let totalMatched = 0;
             for (const group of config) {
+                if (!currentEnabledGroups.has(group.id)) continue;
                 const items = data[group.id];
                 if (!items) continue;
                 const visibleItems = query
-                    ? items.filter(item => item.name.toLowerCase().includes(query) || item.type.toLowerCase().includes(query) || item.rva.toLowerCase().includes(query))
+                    ? items.filter(item => item.name.toLowerCase().includes(query) || item.type.toLowerCase().includes(query) || item.rva.toLowerCase().includes(query) || (item.matchedKey || '').includes(query))
                     : items;
                 if (visibleItems.length) totalMatched += visibleItems.length;
             }
@@ -920,7 +984,12 @@
                 let items = data[group.id];
                 if (!items || !items.length) continue;
                 if (query) {
-                    items = items.filter(item => item.name.toLowerCase().includes(query) || item.type.toLowerCase().includes(query) || item.rva.toLowerCase().includes(query));
+                    items = items.filter(item =>
+                        item.name.toLowerCase().includes(query) ||
+                        item.type.toLowerCase().includes(query) ||
+                        item.rva.toLowerCase().includes(query) ||
+                        (item.matchedKey || '').includes(query)
+                    );
                     if (!items.length) continue;
                 }
 
@@ -962,7 +1031,7 @@
                                         <span class="rank-pill">SCORE ${item.rankScore}</span>
                                     </div>
 
-                                    <div class="analysis-box">${getGroupSummary(item.name, item.type, item)}</div>
+                                    <div class="analysis-box">${getGroupSummary(group, item)}</div>
 
                                     ${options.length ? `
                                     <div class="mb-1">

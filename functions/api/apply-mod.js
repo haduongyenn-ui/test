@@ -3,36 +3,35 @@
 export async function onRequestPost(context) {
     try {
         const { request } = context;
-        
-        // Đọc dữ liệu FormData gửi từ trình duyệt lên
         const formData = await request.formData();
+        
+        // Nhận đầy đủ 2 mã do người dùng tự nhập từ giao diện đưa lên
         const token = formData.get('token');
         const encode_param = formData.get('encode_param');
         const poster_type = formData.get('poster_type');
         const display_mode = formData.get('display_mode');
         const imageFile = formData.get('poster_image');
 
-        // Kiểm tra tính đầy đủ của dữ liệu đầu vào
         if (!token || !encode_param || !imageFile) {
-            return new Response(JSON.stringify({ success: false, message: 'Thiếu thông tin Token, Mã động hoặc File ảnh!' }), {
+            return new Response(JSON.stringify({ success: false, message: 'Vui lòng nhập đủ cả 2 mã và chọn ảnh!' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             });
         }
 
-        // Chuyển đổi dữ liệu ảnh (Blob) sang chuỗi mã hóa Base64 phù hợp với API game
+        // Đọc dữ liệu ảnh và nén sang dạng chuỗi Base64
         const arrayBuffer = await imageFile.arrayBuffer();
         const base64Image = btoa(
             new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
         );
 
-        // Giả lập đầy đủ Header và forward gói tin sang cụm API của Garena
+        // GỬI THẲNG REQUEST SANG GARENA KHÔNG QUA TRUNG GIAN AI HẾT
         const garenaResponse = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/saveposter', {
             method: 'POST',
             headers: {
                 'Host': 'kgvn-api.mobagarena.com',
-                'Msdk-Itopencodeparam': token,
-                'Encodeparam': encode_param,
+                'Msdk-Itopencodeparam': token,         // Token người dùng nhập
+                'Encodeparam': encode_param,           // Mã động người dùng nhập
                 'Content-Type': 'application/json',
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MSDK/5.36.000.9136',
                 'Origin': 'https://kgvn-camp.mobagarena.com',
@@ -49,15 +48,15 @@ export async function onRequestPost(context) {
             })
         });
 
-        // Nhận phản hồi kết quả trực tiếp từ server Garena
         const resData = await garenaResponse.json();
 
+        // Trả kết quả trực tiếp từ Garena về máy người dùng
         return new Response(JSON.stringify({ success: true, data: resData }), {
             headers: { 'Content-Type': 'application/json; charset=utf-8' }
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ success: false, message: 'Lỗi hệ thống Cloudflare: ' + error.message }), {
+        return new Response(JSON.stringify({ success: false, message: 'Lỗi Edge Worker: ' + error.message }), {
             status: 500,
             headers: { 'Content-Type': 'application/json; charset=utf-8' }
         });

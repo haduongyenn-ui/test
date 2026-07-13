@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGVN • HƯỚNG DẪN TỰ NHẬP MÃ</title>
+    <title>KGVN • MOD POSTER FIX</title>
     <style>
         body { background-color: #0b0f19; color: #fff; font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
         .container { width: 100%; max-width: 450px; background: #111827; padding: 25px; border-radius: 12px; border: 1px solid #1f2937; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
@@ -22,18 +22,18 @@
 <body>
 
 <div class="container">
-    <h2>KGVN • MOD POSTER (MANUAL)</h2>
+    <h2>KGVN • MOD POSTER (FIXED)</h2>
     
     <div class="hd">
-        💡 <b>Hướng dẫn nhanh:</b> Bật app Stream ➔ Vào game bấm Thay đổi Poster ➔ Copy chính xác 2 chuỗi mã vừa sinh ra dán vào dưới đây (Hạn dùng: 3 phút).
+        💡 <b>Quy trình:</b> Bật Stream ➔ Vào game bấm lưu Poster ➔ Copy trọn vẹn cả 2 chuỗi mã dán vào dưới đây (Thao tác trong vòng 1-2 phút).
     </div>
 
     <form id="modForm">
         <label>AUTH TOKEN (Msdk-Itopencodeparam)</label>
-        <textarea id="token" placeholder="Dán mã Msdk-Itopencodeparam bắt được từ game..." required></textarea>
+        <textarea id="token" placeholder="Dán mã Msdk-Itopencodeparam từ game..." required></textarea>
 
         <label>MÃ ĐỘNG (Encodeparam)</label>
-        <textarea id="encodeParam" placeholder="Dán mã Encodeparam bắt được từ game..." required></textarea>
+        <textarea id="encodeParam" placeholder="Dán mã Encodeparam từ game..." required></textarea>
 
         <label>CHỌN ẢNH THAY THẾ</label>
         <input type="file" id="posterImage" accept="image/*" required>
@@ -46,8 +46,8 @@
 
         <label>CHẾ ĐỘ HIỂN THỊ</label>
         <select id="displayMode">
-            <option value="private">Riêng tư</option>
-            <option value="public">Quảng trường</option>
+            <option value="private">Riêng tư (Private)</option>
+            <option value="public">Quảng trường (Public)</option>
         </select>
 
         <button type="submit">⚡ ÁP DỤNG TRỰC TIẾP</button>
@@ -60,7 +60,7 @@
     document.getElementById('modForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const statusDiv = document.getElementById('status');
-        statusDiv.innerText = "⏳ Đang đẩy gói tin trực tiếp sang Garena...";
+        statusDiv.innerText = "⏳ Đang đẩy gói tin chuẩn cấu trúc sang Garena...";
         statusDiv.style.color = "#9ca3af";
 
         const formData = new FormData();
@@ -79,10 +79,10 @@
             const result = await response.json();
             
             if (result.success && result.data && (result.data.error_code === 0 || result.data.code === 0)) {
-                statusDiv.innerText = "✅ Áp dụng thành công hoàn toàn!\nTấm ảnh đã được hệ thống Garena phê duyệt. Vào game xem liền nhé.";
+                statusDiv.innerText = "✅ Áp dụng thành công hoàn toàn!\nGarena đã chấp nhận tấm ảnh này. Hãy vào game kiểm tra kết quả.";
                 statusDiv.style.color = "#00ffcc";
             } else {
-                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động hoặc Token đã hết hạn 3 phút.";
+                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động/Token hết hạn hoặc dán thiếu ký tự.";
                 statusDiv.innerText = "❌ Garena từ chối: " + garenaMsg;
                 statusDiv.style.color = "#ef4444";
             }

@@ -3,32 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGVN MOD POSTER - CLOUDFLARE</title>
+    <title>KGVN • HƯỚNG DẪN TỰ NHẬP MÃ</title>
     <style>
         body { background-color: #0b0f19; color: #fff; font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
         .container { width: 100%; max-width: 450px; background: #111827; padding: 25px; border-radius: 12px; border: 1px solid #1f2937; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
         h2 { text-align: center; color: #00ffcc; font-size: 22px; margin-top: 0; margin-bottom: 25px; letter-spacing: 1px; }
         label { display: block; margin: 15px 0 6px; color: #9ca3af; font-size: 13px; font-weight: 600; }
-        textarea, input[type="file"], select { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 14px; }
+        textarea, input[type="file"], select { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 13px; }
         textarea { height: 70px; resize: none; }
         textarea:focus, select:focus { border-color: #00ffcc; outline: none; }
         input[type="file"] { padding: 10px; background: #111827; cursor: pointer; }
         button { width: 100%; padding: 14px; background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-top: 25px; font-size: 16px; transition: opacity 0.2s; }
         button:hover { opacity: 0.9; }
-        #status { margin-top: 15px; text-align: center; font-size: 14px; font-weight: 500; line-height: 1.4; }
+        #status { margin-top: 15px; text-align: center; font-size: 14px; font-weight: 500; line-height: 1.4; white-space: pre-line; }
+        .hd { background: #1f2937; padding: 10px; border-radius: 6px; font-size: 12px; color: #a3a3a3; margin-bottom: 15px; border-left: 3px solid #00ffcc; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>KGVN • MOD POSTER</h2>
+    <h2>KGVN • MOD POSTER (MANUAL)</h2>
     
+    <div class="hd">
+        💡 <b>Hướng dẫn nhanh:</b> Bật app Stream ➔ Vào game bấm Thay đổi Poster ➔ Copy chính xác 2 chuỗi mã vừa sinh ra dán vào dưới đây (Hạn dùng: 3 phút).
+    </div>
+
     <form id="modForm">
         <label>AUTH TOKEN (Msdk-Itopencodeparam)</label>
-        <textarea id="token" placeholder="Dán mã msdk-itopencodeparam mới vào đây..." required></textarea>
+        <textarea id="token" placeholder="Dán mã Msdk-Itopencodeparam bắt được từ game..." required></textarea>
 
         <label>MÃ ĐỘNG (Encodeparam)</label>
-        <textarea id="encodeParam" placeholder="Dán mã encodeparam mới vào đây..." required></textarea>
+        <textarea id="encodeParam" placeholder="Dán mã Encodeparam bắt được từ game..." required></textarea>
 
         <label>CHỌN ẢNH THAY THẾ</label>
         <input type="file" id="posterImage" accept="image/*" required>
@@ -45,7 +50,7 @@
             <option value="public">Quảng trường</option>
         </select>
 
-        <button type="submit">⚡ ÁP DỤNG TRÊN CLOUDFLARE</button>
+        <button type="submit">⚡ ÁP DỤNG TRỰC TIẾP</button>
     </form>
 
     <div id="status"></div>
@@ -55,7 +60,7 @@
     document.getElementById('modForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const statusDiv = document.getElementById('status');
-        statusDiv.innerText = "Đang xử lý gói tin qua Cloudflare...";
+        statusDiv.innerText = "⏳ Đang đẩy gói tin trực tiếp sang Garena...";
         statusDiv.style.color = "#9ca3af";
 
         const formData = new FormData();
@@ -66,23 +71,23 @@
         formData.append('display_mode', document.getElementById('displayMode').value);
 
         try {
-            // Gọi trực tiếp đến Pages Functions nội bộ
             const response = await fetch('/api/apply-mod', {
                 method: 'POST',
                 body: formData
             });
 
             const result = await response.json();
+            
             if (result.success && result.data && (result.data.error_code === 0 || result.data.code === 0)) {
-                statusDiv.innerText = "Áp dụng thành công! Vào game để kiểm tra kết quả.";
+                statusDiv.innerText = "✅ Áp dụng thành công hoàn toàn!\nTấm ảnh đã được hệ thống Garena phê duyệt. Vào game xem liền nhé.";
                 statusDiv.style.color = "#00ffcc";
             } else {
-                const errorMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã token/mã động đã hết hạn hoặc không hợp lệ.";
-                statusDiv.innerText = "Thất bại từ Garena: " + errorMsg;
+                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động hoặc Token đã hết hạn 3 phút.";
+                statusDiv.innerText = "❌ Garena từ chối: " + garenaMsg;
                 statusDiv.style.color = "#ef4444";
             }
         } catch (error) {
-            statusDiv.innerText = "Lỗi kết nối hoặc hệ thống Cloudflare Workers gặp sự cố.";
+            statusDiv.innerText = "❌ Lỗi kết nối hệ thống Cloudflare!";
             statusDiv.style.color = "#ef4444";
         }
     });

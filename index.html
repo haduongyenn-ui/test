@@ -3,37 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGVN • MOD POSTER FIX</title>
+    <title>KGVN • MOD POSTER (AUTO HAR)</title>
     <style>
         body { background-color: #0b0f19; color: #fff; font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
         .container { width: 100%; max-width: 450px; background: #111827; padding: 25px; border-radius: 12px; border: 1px solid #1f2937; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
-        h2 { text-align: center; color: #00ffcc; font-size: 22px; margin-top: 0; margin-bottom: 25px; letter-spacing: 1px; }
+        h2 { text-align: center; color: #00ffcc; font-size: 22px; margin-top: 0; margin-bottom: 20px; letter-spacing: 1px; }
         label { display: block; margin: 15px 0 6px; color: #9ca3af; font-size: 13px; font-weight: 600; }
         textarea, input[type="file"], select { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #fff; box-sizing: border-box; font-family: monospace; font-size: 13px; }
-        textarea { height: 70px; resize: none; }
+        textarea { height: 60px; resize: none; }
         textarea:focus, select:focus { border-color: #00ffcc; outline: none; }
         input[type="file"] { padding: 10px; background: #111827; cursor: pointer; }
         button { width: 100%; padding: 14px; background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-top: 25px; font-size: 16px; transition: opacity 0.2s; }
         button:hover { opacity: 0.9; }
         #status { margin-top: 15px; text-align: center; font-size: 14px; font-weight: 500; line-height: 1.4; white-space: pre-line; }
         .hd { background: #1f2937; padding: 10px; border-radius: 6px; font-size: 12px; color: #a3a3a3; margin-bottom: 15px; border-left: 3px solid #00ffcc; }
+        .tab-btn { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .tab-btn.active { background: #00ffcc; color: #000; border-color: #00ffcc; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>KGVN • MOD POSTER (FIXED)</h2>
+    <h2>KGVN • MOD POSTER</h2>
     
     <div class="hd">
-        💡 <b>Quy trình:</b> Bật Stream ➔ Vào game bấm lưu Poster ➔ Copy trọn vẹn cả 2 chuỗi mã dán vào dưới đây (Thao tác trong vòng 1-2 phút).
+        💡 <b>Cách làm:</b> Bật app Stream ➔ Lưu Poster trong game ➔ Xuất file <b>.har</b> rồi tải lên đây. Web sẽ tự bóc tách mã chuẩn 100%!
+    </div>
+
+    <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+        <button type="button" class="tab-btn active" onclick="switchTab('har-tab')">📁 UP FILE .HAR (KHUYÊN DÙNG)</button>
+        <button type="button" class="tab-btn" onclick="switchTab('manual-tab')">✍️ NHẬP THỦ CÔNG</button>
     </div>
 
     <form id="modForm">
-        <label>AUTH TOKEN (Msdk-Itopencodeparam)</label>
-        <textarea id="token" placeholder="Dán mã Msdk-Itopencodeparam từ game..." required></textarea>
+        <div id="har-tab" class="tab-content active">
+            <label>TẢI LÊN FILE .HAR CỦA APP STREAM</label>
+            <input type="file" id="harFile" accept=".har">
+        </div>
 
-        <label>MÃ ĐỘNG (Encodeparam)</label>
-        <textarea id="encodeParam" placeholder="Dán mã Encodeparam từ game..." required></textarea>
+        <div id="manual-tab" class="tab-content">
+            <label>AUTH TOKEN (Msdk-Itopencodeparam)</label>
+            <textarea id="token" placeholder="Dán mã Msdk-Itopencodeparam..."></textarea>
+
+            <label>MÃ ĐỘNG (Encodeparam)</label>
+            <textarea id="encodeParam" placeholder="Dán mã Encodeparam..."></textarea>
+        </div>
 
         <label>CHỌN ẢNH THAY THẾ</label>
         <input type="file" id="posterImage" accept="image/*" required>
@@ -50,26 +66,113 @@
             <option value="public">Quảng trường (Public)</option>
         </select>
 
-        <button type="submit">⚡ ÁP DỤNG TRỰC TIẾP</button>
+        <button type="submit">⚡ ÁP DỤNG POSTER</button>
     </form>
 
     <div id="status"></div>
 </div>
 
 <script>
+    let activeTab = 'har-tab';
+
+    function switchTab(tabId) {
+        activeTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (tabId === 'har-tab') {
+            document.querySelector('button[onclick*="har-tab"]').classList.add('active');
+            document.getElementById('har-tab').classList.add('active');
+            document.getElementById('token').removeAttribute('required');
+            document.getElementById('encodeParam').removeAttribute('required');
+            document.getElementById('harFile').setAttribute('required', 'required');
+        } else {
+            document.querySelector('button[onclick*="manual-tab"]').classList.add('active');
+            document.getElementById('manual-tab').classList.add('active');
+            document.getElementById('harFile').removeAttribute('required');
+            document.getElementById('token').setAttribute('required', 'required');
+            document.getElementById('encodeParam').setAttribute('required', 'required');
+        }
+    }
+
+    // Thiết lập thuộc tính required mặc định ban đầu cho tab HAR
+    switchTab('har-tab');
+
     document.getElementById('modForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const statusDiv = document.getElementById('status');
-        statusDiv.innerText = "⏳ Đang đẩy gói tin chuẩn cấu trúc sang Garena...";
+        statusDiv.innerText = "⏳ Đang xử lý...";
         statusDiv.style.color = "#9ca3af";
 
         const formData = new FormData();
-        formData.append('token', document.getElementById('token').value.trim());
-        formData.append('encode_param', document.getElementById('encodeParam').value.trim());
         formData.append('poster_image', document.getElementById('posterImage').files[0]);
         formData.append('poster_type', document.getElementById('posterType').value);
         formData.append('display_mode', document.getElementById('displayMode').value);
 
+        if (activeTab === 'har-tab') {
+            const harFile = document.getElementById('harFile').files[0];
+            if (!harFile) {
+                statusDiv.innerText = "❌ Vui lòng chọn file .har!";
+                statusDiv.style.color = "#ef4444";
+                return;
+            }
+            statusDiv.innerText = "🔄 Đang phân tích dữ liệu file .har...";
+            
+            // Đọc file .har ngay tại trình duyệt để bóc tách Token
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                try {
+                    const harData = JSON.parse(event.target.result);
+                    let token = null;
+                    let encodeParam = null;
+
+                    // Duyệt tất cả các request trong file HAR để tìm API saveposter hoặc editInfo
+                    const entries = harData.log.entries;
+                    for (let entry of entries) {
+                        const url = entry.request.url;
+                        if (url.includes('/playerimage/saveposter') || url.includes('/playerimage/editInfo')) {
+                            const headers = entry.request.headers;
+                            for (let header of headers) {
+                                if (header.name.toLowerCase() === 'msdk-itopencodeparam') {
+                                    token = header.value;
+                                }
+                                if (header.name.toLowerCase() === 'encodeparam') {
+                                    encodeParam = header.value;
+                                }
+                            }
+                        }
+                        if (token && encodeParam) break; // Tìm thấy thì dừng vòng lặp
+                    }
+
+                    if (!token || !encodeParam) {
+                        statusDiv.innerText = "❌ Không tìm thấy gói tin đổi Poster trong file .har!\nHãy chắc chắn bạn đã bấm Lưu Poster trong game khi đang bật app Stream.";
+                        statusDiv.style.color = "#ef4444";
+                        return;
+                    }
+
+                    // Tiến hành gửi dữ liệu đã bóc tách lên Backend
+                    formData.append('token', token);
+                    formData.append('encode_param', encodeParam);
+                    sendRequest(formData);
+
+                } catch (err) {
+                    statusDiv.innerText = "❌ File .har bị lỗi định dạng hoặc không hợp lệ!";
+                    statusDiv.style.color = "#ef4444";
+                }
+            };
+            reader.readAsText(harFile);
+        } else {
+            // Trường hợp nhập thủ công
+            formData.append('token', document.getElementById('token').value.trim());
+            formData.append('encode_param', document.getElementById('encodeParam').value.trim());
+            sendRequest(formData);
+        }
+    });
+
+    async function sendRequest(formData) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = "🚀 Đã bóc tách mã thành công! Đang gửi yêu cầu sang Garena...";
+        
         try {
             const response = await fetch('/api/apply-mod', {
                 method: 'POST',
@@ -79,18 +182,18 @@
             const result = await response.json();
             
             if (result.success && result.data && (result.data.error_code === 0 || result.data.code === 0)) {
-                statusDiv.innerText = "✅ Áp dụng thành công hoàn toàn!\nGarena đã chấp nhận tấm ảnh này. Hãy vào game kiểm tra kết quả.";
+                statusDiv.innerText = "✅ ĐỔI POSTER THÀNH CÔNG!\nHệ thống Garena đã phê duyệt ảnh của bạn. Vào game hưởng thụ thành quả nào!";
                 statusDiv.style.color = "#00ffcc";
             } else {
-                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động/Token hết hạn hoặc dán thiếu ký tự.";
-                statusDiv.innerText = "❌ Garena từ chối: " + garenaMsg;
+                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động hoặc Token đã hết hạn.";
+                statusDiv.innerText = "❌ Thất bại: " + garenaMsg;
                 statusDiv.style.color = "#ef4444";
             }
         } catch (error) {
-            statusDiv.innerText = "❌ Lỗi kết nối hệ thống Cloudflare!";
+            statusDiv.innerText = "❌ Lỗi kết nối đến Edge Workers của Cloudflare!";
             statusDiv.style.color = "#ef4444";
         }
-    });
+    }
 </script>
 </body>
 </html>

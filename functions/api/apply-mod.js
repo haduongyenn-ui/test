@@ -7,8 +7,8 @@ export async function onRequestPost(context) {
         
         const token = formData.get('token');
         const encode_param = formData.get('encode_param');
-        const poster_type = formData.get('poster_type'); // 'load_tran' hoặc 'flowborn'
-        const display_mode = formData.get('display_mode'); // 'public' hoặc 'private'
+        const poster_type = formData.get('poster_type'); 
+        const display_mode = formData.get('display_mode'); 
         const imageFile = formData.get('poster_image');
 
         if (!token || !encode_param || !imageFile) {
@@ -18,10 +18,10 @@ export async function onRequestPost(context) {
             });
         }
 
-        // Đọc định dạng ảnh (png, jpeg,...) để tạo tiền tố chuẩn như file Python
-        const mimeType = imageFile.type || 'image/png';
+        // Đọc định dạng ảnh (png, jpeg)
+        const mimeType = imageFile.type || 'image/jpeg';
 
-        // Chuyển file ảnh sang chuỗi mã hóa Base64 chuẩn hóa trên Cloudflare Workers
+        // Chuyển ảnh sang chuỗi Base64 hoạt động ổn định trên Cloudflare Workers
         const arrayBuffer = await imageFile.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
         let binaryString = '';
@@ -30,10 +30,10 @@ export async function onRequestPost(context) {
         }
         const base64Raw = globalThis.btoa ? globalThis.btoa(binaryString) : btoa(binaryString);
         
-        // Tạo chuỗi Base64 có tiền tố định dạng chuẩn (Giống hệt cách file Python xử lý)
+        // Tạo chuỗi Base64 chuẩn hóa có tiền tố định dạng như game thực tế yêu cầu
         const base64Image = `data:${mimeType};base64,${base64Raw}`;
 
-        // Thiết lập Header chuẩn đồng bộ cho mọi yêu cầu gửi tới Garena
+        // Header chuẩn hóa đồng bộ gửi sang Garena
         const commonHeaders = {
             'Host': 'kgvn-api.mobagarena.com',
             'Msdk-Itopencodeparam': token,
@@ -48,8 +48,8 @@ export async function onRequestPost(context) {
             'Accept-Language': 'vi-VN,vi;q=0.9'
         };
 
-        // ➔ BƯỚC 1: KHỞI TẠO PHIÊN ĐỔI (editInfo)
-        const editInfoRes = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/editInfo', {
+        // ➔ BƯỚC 1: KHỞI TẠO PHIÊN (editInfo)
+        const editInfoResponse = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/editInfo', {
             method: 'POST',
             headers: commonHeaders,
             body: JSON.stringify({
@@ -58,49 +58,32 @@ export async function onRequestPost(context) {
                 areaid: 1
             })
         });
-        const editInfoData = await editInfoRes.json();
-        if (editInfoData.error_code !== 0 && editInfoData.code !== 0) {
+        
+        const editInfoResult = await editInfoResponse.json();
+
+        // Nếu bước đăng ký phiên lỗi, dừng lại luôn để báo lỗi cụ thể
+        if (editInfoResult.error_code !== 0 && editInfoResult.code !== 0) {
             return new Response(JSON.stringify({ 
                 success: false, 
-                message: 'Lỗi khởi tạo phiên (editInfo): ' + (editInfoData.error_msg || editInfoData.msg)
+                message: 'Lỗi đăng ký phiên Garena (editInfo): ' + (editInfoResult.error_msg || editInfoResult.msg)
             }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
         }
 
-        // ➔ BƯỚC 2: TẢI ẢNH LÊN CDN GARENA (upload_image) - BÍ MẬT TỪ FILE PYTHON
-        const uploadRes = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/upload_image', {
+        // ➔ BƯỚC 2: GỬI TRỰC TIẾP ẢNH BASE64 (saveposter) - CHUẨN FILE HAR SÁNG NAY
+        const savePosterResponse = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/saveposter', {
             method: 'POST',
             headers: commonHeaders,
             body: JSON.stringify({
                 image_data: base64Image,
                 type: poster_type,
-                areaid: 1
-            })
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.error_code !== 0 && uploadData.code !== 0) {
-            return new Response(JSON.stringify({ 
-                success: false, 
-                message: 'Lỗi tải ảnh lên CDN Garena (upload_image): ' + (uploadData.error_msg || uploadData.msg)
-            }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
-        }
-
-        // Lấy đường dẫn ảnh CDN do Garena trả về sau khi upload thành công
-        const cdnImageUrl = uploadData.data?.image_url || uploadData.image_url;
-
-        // ➔ BƯỚC 3: LƯU VÀ ÁP DỤNG POSTER (saveposter)
-        const saveRes = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/saveposter', {
-            method: 'POST',
-            headers: commonHeaders,
-            body: JSON.stringify({
-                image_url: cdnImageUrl, // Sử dụng đường link CDN vừa nhận ở bước 2
-                type: poster_type,
                 mode: display_mode,
                 areaid: 1
             })
         });
-        const saveData = await saveRes.json();
 
-        return new Response(JSON.stringify({ success: true, data: saveData }), {
+        const resData = await savePosterResponse.json();
+
+        return new Response(JSON.stringify({ success: true, data: resData }), {
             headers: { 'Content-Type': 'application/json; charset=utf-8' }
         });
 

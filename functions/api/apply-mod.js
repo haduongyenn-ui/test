@@ -12,7 +12,7 @@ export async function onRequestPost(context) {
         const imageFile = formData.get('poster_image');
 
         if (!token || !encode_param || !imageFile) {
-            return new Response(JSON.stringify({ success: false, message: 'Vui lòng nhập đủ cả 2 mã và chọn ảnh!' }), {
+            return new Response(JSON.stringify({ success: false, message: 'Thiếu dữ liệu xác thực hoặc file ảnh!' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json; charset=utf-8' }
             });
@@ -21,7 +21,7 @@ export async function onRequestPost(context) {
         // Đọc định dạng ảnh (png, jpeg)
         const mimeType = imageFile.type || 'image/jpeg';
 
-        // Chuyển ảnh sang chuỗi Base64 hoạt động ổn định trên Cloudflare Workers
+        // Mã hóa ảnh sang dạng Base64 tương thích 100% với môi trường Cloudflare Workers Edge
         const arrayBuffer = await imageFile.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
         let binaryString = '';
@@ -30,10 +30,10 @@ export async function onRequestPost(context) {
         }
         const base64Raw = globalThis.btoa ? globalThis.btoa(binaryString) : btoa(binaryString);
         
-        // Tạo chuỗi Base64 chuẩn hóa có tiền tố định dạng như game thực tế yêu cầu
+        // Gắn tiền tố định dạng ảnh chuẩn hóa
         const base64Image = `data:${mimeType};base64,${base64Raw}`;
 
-        // Header chuẩn hóa đồng bộ gửi sang Garena
+        // Header chuẩn hóa mô phỏng ứng dụng game gửi đi
         const commonHeaders = {
             'Host': 'kgvn-api.mobagarena.com',
             'Msdk-Itopencodeparam': token,
@@ -61,7 +61,7 @@ export async function onRequestPost(context) {
         
         const editInfoResult = await editInfoResponse.json();
 
-        // Nếu bước đăng ký phiên lỗi, dừng lại luôn để báo lỗi cụ thể
+        // Nếu bước editInfo báo lỗi, dừng ngay để thông báo chi tiết
         if (editInfoResult.error_code !== 0 && editInfoResult.code !== 0) {
             return new Response(JSON.stringify({ 
                 success: false, 
@@ -69,7 +69,7 @@ export async function onRequestPost(context) {
             }), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
         }
 
-        // ➔ BƯỚC 2: GỬI TRỰC TIẾP ẢNH BASE64 (saveposter) - CHUẨN FILE HAR SÁNG NAY
+        // ➔ BƯỚC 2: TIẾN HÀNH GHI ĐÈ ẢNH (saveposter)
         const savePosterResponse = await fetch('https://kgvn-api.mobagarena.com/api/game/poster/playerimage/saveposter', {
             method: 'POST',
             headers: commonHeaders,

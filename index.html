@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KGVN • MOD POSTER (AUTO HAR)</title>
+    <title>KGVN • MOD POSTER (AUTO HAR V2)</title>
     <style>
         body { background-color: #0b0f19; color: #fff; font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
         .container { width: 100%; max-width: 450px; background: #111827; padding: 25px; border-radius: 12px; border: 1px solid #1f2937; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
@@ -29,11 +29,11 @@
     <h2>KGVN • MOD POSTER</h2>
     
     <div class="hd">
-        💡 <b>Cách làm:</b> Bật app Stream ➔ Lưu Poster trong game ➔ Xuất file <b>.har</b> rồi tải lên đây. Web sẽ tự bóc tách mã chuẩn 100%!
+        💡 <b>Cách làm:</b> Bật app Stream ➔ Vào game bấm thay đổi Poster ➔ Quay lại app Stream xuất file <b>.har</b> rồi tải lên đây. Web tự bóc tách mã siêu chuẩn!
     </div>
 
     <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-        <button type="button" class="tab-btn active" onclick="switchTab('har-tab')">📁 UP FILE .HAR (KHUYÊN DÙNG)</button>
+        <button type="button" class="tab-btn active" onclick="switchTab('har-tab')">📁 UP FILE .HAR (TỰ ĐỘNG)</button>
         <button type="button" class="tab-btn" onclick="switchTab('manual-tab')">✍️ NHẬP THỦ CÔNG</button>
     </div>
 
@@ -95,7 +95,6 @@
         }
     }
 
-    // Thiết lập thuộc tính required mặc định ban đầu cho tab HAR
     switchTab('har-tab');
 
     document.getElementById('modForm').addEventListener('submit', async (e) => {
@@ -116,9 +115,8 @@
                 statusDiv.style.color = "#ef4444";
                 return;
             }
-            statusDiv.innerText = "🔄 Đang phân tích dữ liệu file .har...";
+            statusDiv.innerText = "🔍 Đang phân tích file .har tìm cặp mã hợp lệ...";
             
-            // Đọc file .har ngay tại trình duyệt để bóc tách Token
             const reader = new FileReader();
             reader.onload = async function(event) {
                 try {
@@ -126,43 +124,46 @@
                     let token = null;
                     let encodeParam = null;
 
-                    // Duyệt tất cả các request trong file HAR để tìm API saveposter hoặc editInfo
+                    // BỘ LỌC V2: Quét mọi gói tin có chứa headers mã của Garena không phân biệt URL
                     const entries = harData.log.entries;
                     for (let entry of entries) {
-                        const url = entry.request.url;
-                        if (url.includes('/playerimage/saveposter') || url.includes('/playerimage/editInfo')) {
-                            const headers = entry.request.headers;
-                            for (let header of headers) {
-                                if (header.name.toLowerCase() === 'msdk-itopencodeparam') {
-                                    token = header.value;
-                                }
-                                if (header.name.toLowerCase() === 'encodeparam') {
-                                    encodeParam = header.value;
-                                }
+                        const headers = entry.request.headers;
+                        let tempToken = null;
+                        let tempEncode = null;
+                        
+                        for (let header of headers) {
+                            const name = header.name.toLowerCase();
+                            if (name === 'msdk-itopencodeparam') {
+                                tempToken = header.value;
+                            }
+                            if (name === 'encodeparam') {
+                                tempEncode = header.value;
                             }
                         }
-                        if (token && encodeParam) break; // Tìm thấy thì dừng vòng lặp
+                        // Nếu tìm thấy một request chứa cả 2 mã này, ưu tiên lấy gói tin mới nhất
+                        if (tempToken && tempEncode) {
+                            token = tempToken;
+                            encodeParam = tempEncode;
+                        }
                     }
 
                     if (!token || !encodeParam) {
-                        statusDiv.innerText = "❌ Không tìm thấy gói tin đổi Poster trong file .har!\nHãy chắc chắn bạn đã bấm Lưu Poster trong game khi đang bật app Stream.";
+                        statusDiv.innerText = "❌ Không tìm thấy gói tin đổi Poster nào chứa Token trong file .har!\n👉 Hãy chắc chắn bạn đã vào game và thực hiện hành động bấm Thay đổi Poster khi app Stream đang hoạt động.";
                         statusDiv.style.color = "#ef4444";
                         return;
                     }
 
-                    // Tiến hành gửi dữ liệu đã bóc tách lên Backend
                     formData.append('token', token);
                     formData.append('encode_param', encodeParam);
                     sendRequest(formData);
 
                 } catch (err) {
-                    statusDiv.innerText = "❌ File .har bị lỗi định dạng hoặc không hợp lệ!";
+                    statusDiv.innerText = "❌ File .har bị lỗi định dạng hoặc không đọc được!";
                     statusDiv.style.color = "#ef4444";
                 }
             };
             reader.readAsText(harFile);
         } else {
-            // Trường hợp nhập thủ công
             formData.append('token', document.getElementById('token').value.trim());
             formData.append('encode_param', document.getElementById('encodeParam').value.trim());
             sendRequest(formData);
@@ -171,7 +172,7 @@
 
     async function sendRequest(formData) {
         const statusDiv = document.getElementById('status');
-        statusDiv.innerText = "🚀 Đã bóc tách mã thành công! Đang gửi yêu cầu sang Garena...";
+        statusDiv.innerText = "🚀 Đã tìm thấy cặp mã! Đang nạp phiên và đẩy ảnh sang Garena...";
         
         try {
             const response = await fetch('/api/apply-mod', {
@@ -182,15 +183,15 @@
             const result = await response.json();
             
             if (result.success && result.data && (result.data.error_code === 0 || result.data.code === 0)) {
-                statusDiv.innerText = "✅ ĐỔI POSTER THÀNH CÔNG!\nHệ thống Garena đã phê duyệt ảnh của bạn. Vào game hưởng thụ thành quả nào!";
+                statusDiv.innerText = "✅ THÀNH CÔNG RỰC RỠ!\nGarena đã chấp nhận ảnh của bạn. Hãy vào game xem kết quả ngay lập tức!";
                 statusDiv.style.color = "#00ffcc";
             } else {
-                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Mã động hoặc Token đã hết hạn.";
-                statusDiv.innerText = "❌ Thất bại: " + garenaMsg;
+                const garenaMsg = result.data?.error_msg || result.data?.msg || result.message || "Gói tin đã quá hạn 3 phút.";
+                statusDiv.innerText = "❌ Thất bại từ Garena: " + garenaMsg;
                 statusDiv.style.color = "#ef4444";
             }
         } catch (error) {
-            statusDiv.innerText = "❌ Lỗi kết nối đến Edge Workers của Cloudflare!";
+            statusDiv.innerText = "❌ Lỗi kết nối hệ thống Edge Workers!";
             statusDiv.style.color = "#ef4444";
         }
     }
